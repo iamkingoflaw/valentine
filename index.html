@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Will you be my Valentine?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #ffe6eb;
+      overflow: hidden; /* Prevents scrollbars if button moves near edge */
+    }
+
+    .card {
+      text-align: center;
+      background: white;
+      padding: 30px;
+      width: 80%;
+      max-width: 400px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #ff4d6d;
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      height: 100px;
+      position: relative;
+    }
+
+    button {
+      font-size: 18px;
+      font-weight: 600;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      touch-action: manipulation; /* Optimizes for mobile tapping */
+    }
+
+    #yes {
+      background: #ff4d6d;
+      color: white;
+      z-index: 2;
+    }
+
+    #no {
+      background: #fbafba;
+      color: white;
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" id="mainCard">
+  <h1>Will you be my Valentine? 🌹</h1>
+  <div class="buttons">
+    <button id="yes" onclick="yesClick()">Yes</button>
+    <button id="no" onmouseover="moveNo()" ontouchstart="moveNo()">No</button>
+  </div>
+</div>
+
+<script>
+  function moveNo() {
+    const noBtn = document.getElementById("no");
+    
+    // Calculate random position within a reasonable range
+    // Adjusting these numbers changes how far the button "jumps"
+    const x = Math.random() * (window.innerWidth - noBtn.offsetWidth) - (window.innerWidth / 2) + 50;
+    const y = Math.random() * (window.innerHeight - noBtn.offsetHeight) - (window.innerHeight / 2) + 50;
+    
+    noBtn.style.position = "absolute";
+    noBtn.style.left = "50%";
+    noBtn.style.top = "50%";
+    noBtn.style.transform = `translate(${x}px, ${y}px)`;
+  }
+
+  function yesClick() {
+    const card = document.getElementById("mainCard");
+    card.innerHTML = "<h1 style='font-size: 2rem;'>I knew it! ❤️</h1><p>See you on the 14th!</p>";
+    
+    // Add some confetti effect or similar here if you're feeling fancy!
+    document.body.style.background = "#ffb3c1";
+  }
+</script>
+
+</body>
+</html>
