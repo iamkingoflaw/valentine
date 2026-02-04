@@ -15,50 +15,43 @@
       align-items: center;
       background: #ffe6eb;
       overflow: hidden;
-      touch-action: none; /* Crucial for mobile performance */
+      touch-action: none;
     }
 
     .card {
       text-align: center;
       background: white;
-      padding: 60px; 
+      padding: 50px; 
       width: 90vw;
-      max-width: 600px;
-      min-height: 450px; 
+      max-width: 550px;
+      min-height: 400px; 
       border-radius: 40px;
       box-shadow: 0 15px 50px rgba(0,0,0,0.1);
       z-index: 10;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      position: relative; /* Keeps "No" button inside this container */
-      transition: all 0.2s ease-out;
+      justify-content: center;
+      position: relative; /* This is the anchor for the No button */
+      transition: all 0.3s ease-out;
     }
 
     #joke-text {
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: #ff4d6d;
       min-height: 60px;
-      margin-top: 10px;
-      font-weight: 800; /* Bold as requested */
+      margin-bottom: 10px;
+      font-weight: 800; /* BOLD as requested */
       text-transform: uppercase;
+      line-height: 1.2;
     }
 
     h1 {
       color: #ff4d6d;
-      font-size: 1.6rem;
+      font-size: 1.8rem;
       margin-bottom: 20px;
-    }
-
-    /* This wrapper defines the playground for the No button */
-    .playground {
-      width: 100%;
-      flex-grow: 1;
-      position: relative; 
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      z-index: 11;
+      position: relative;
     }
 
     button {
@@ -73,16 +66,17 @@
     #yes {
       background: #ff4d6d;
       color: white;
-      z-index: 11;
+      z-index: 15; /* Keeps it above the card content */
+      position: relative;
       transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     #no {
       background: #fbafba;
       color: white;
-      position: absolute; /* Relative to the playground */
-      z-index: 12;
-      transition: 0.1s ease-out;
+      position: absolute; /* Locked INSIDE the .card */
+      z-index: 20; /* ALWAYS stay above the Yes button so it's visible */
+      transition: 0.15s ease-out;
       white-space: nowrap;
     }
   </style>
@@ -93,10 +87,8 @@
   <div id="joke-text">CATCH ME IF YOU CAN! 😉</div>
   <h1>Will you be my Valentine? 🌹</h1>
   
-  <div class="playground" id="playground">
-    <button id="yes" onclick="yesClick()">Yes</button>
-    <button id="no" onmouseover="moveNo()" onmousedown="moveNo()" ontouchstart="moveNo()">No</button>
-  </div>
+  <button id="yes" onclick="yesClick()">Yes</button>
+  <button id="no" onmouseover="moveNo()" onmousedown="moveNo()" ontouchstart="moveNo()">No</button>
 </div>
 
 <script>
@@ -106,9 +98,8 @@
   const jokes = [
     "NICE TRY! 😉", "NOT EVEN CLOSE!", "IS THAT ALL YOU GOT?", "ERROR 404: NO NOT FOUND!", 
     "YOU'RE QUITE THE CHASER!", "I CAN DO THIS ALL DAY!", "ALMOST HAD IT!", "KEEP TRYING!",
-    "MISSED ME!", "TOO SLOW!", "WAIT, DID YOU SEE THAT?", "NOPE!", "NOT TODAY!", 
-    "ARE YOUR FINGERS TIRED?", "I'M A NINJA!", "STILL GOING?", "JUST SAY YES!",
-    "DENIED!", "YOU'RE CLICKING AIR!", "CATCH ME IF YOU CAN!", "VICTORY IS MINE!"
+    "MISSED ME!", "TOO SLOW!", "NOPE!", "NOT TODAY!", "I'M A NINJA!", "STILL GOING?", 
+    "DENIED!", "YOU'RE CLICKING AIR!", "VICTORY IS MINE!", "JUST SAY YES!"
   ];
 
   function moveNo() {
@@ -116,44 +107,30 @@
     const yesBtn = document.getElementById("yes");
     const card = document.getElementById("mainCard");
     const jokeDisplay = document.getElementById("joke-text");
-    const playground = document.getElementById("playground");
 
-    // 1. Grow the Yes button and the Card
-    scaleFactor += 0.25;
+    // 1. Grow the Yes button and the White Card Border
+    scaleFactor += 0.22;
     yesBtn.style.transform = `scale(${scaleFactor})`;
     
-    // Expand card padding and min-height to keep the border "Larger/Longer"
-    card.style.padding = (60 + (scaleFactor * 5)) + "px";
-    card.style.minHeight = (450 + (scaleFactor * 20)) + "px";
+    // Expand the white card dimensions so it's "Larger and Longer"
+    card.style.padding = (50 + (scaleFactor * 8)) + "px";
+    card.style.minHeight = (400 + (scaleFactor * 25)) + "px";
 
-    // 2. Keep "No" inside the white card
-    const pWidth = playground.clientWidth;
-    const pHeight = playground.clientHeight;
-    const btnW = noBtn.offsetWidth;
-    const btnH = noBtn.offsetHeight;
+    // 2. Teleport No button ONLY within the white card
+    const cardWidth = card.clientWidth;
+    const cardHeight = card.clientHeight;
+    const btnWidth = noBtn.offsetWidth;
+    const btnHeight = noBtn.offsetHeight;
 
-    // Boundary calculation within the playground
-    const maxX = pWidth - btnW;
-    const maxY = pHeight - btnH;
+    // We leave a 30px safety margin from the white border edges
+    const margin = 30;
+    const maxX = cardWidth - btnWidth - margin;
+    const maxY = cardHeight - btnHeight - margin;
 
-    let randomX, randomY;
-    const yesRect = yesBtn.getBoundingClientRect();
-    const playRect = playground.getBoundingClientRect();
+    const randomX = Math.max(margin, Math.floor(Math.random() * maxX));
+    const randomY = Math.max(margin, Math.floor(Math.random() * maxY));
 
-    // Loop to prevent the "No" button from landing under the "Yes" button
-    let safetyCheck = 0;
-    do {
-      randomX = Math.floor(Math.random() * maxX);
-      randomY = Math.floor(Math.random() * maxY);
-      safetyCheck++;
-    } while (
-      // If the random spot overlaps with where the "Yes" button is on screen
-      (randomX + playRect.left < yesRect.right + 20 &&
-       randomX + playRect.left + btnW > yesRect.left - 20 &&
-       randomY + playRect.top < yesRect.bottom + 20 &&
-       randomY + playRect.top + btnH > yesRect.top - 20) && safetyCheck < 20
-    );
-
+    // Because the button is 'absolute' inside the card, 0,0 is the top-left of the white box
     noBtn.style.left = randomX + "px";
     noBtn.style.top = randomY + "px";
 
@@ -166,11 +143,12 @@
     const card = document.getElementById("mainCard");
     document.getElementById("no").style.display = "none";
     
+    card.style.minHeight = "auto";
     card.innerHTML = `
       <h1 style='font-size: 2.5rem;'>I KNEW IT! ❤️</h1>
       <p style='color: #ff4d6d; font-weight: 800; font-size: 1.2rem;'>
-        WHY DID THE SKELETON GO TO THE VALENTINE'S DANCE?<br>
-        <span style='color: #333;'>TO SEE HIS GHOUL-FRIEND!</span>
+        WHAT DID THE STAMP SAY TO THE ENVELOPE?<br>
+        <span style='color: #333;'>I'M STUCK ON YOU!</span>
       </p>
       <p>Happy Valentine's Day! 😘</p>
     `;
