@@ -21,40 +21,48 @@
     .card {
       text-align: center;
       background: white;
-      padding: 30px;
-      width: 85%;
-      max-width: 350px;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      padding: 40px;
+      width: auto;
+      min-width: 300px;
+      max-width: 90vw; /* Keeps it from breaking on mobile */
+      border-radius: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
       z-index: 10;
-      position: relative;
+      transition: all 0.3s ease-out; /* Smoothly expands white border */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     #joke-text {
-      font-size: 0.85rem;
+      font-size: 1rem;
       color: #ff4d6d;
-      min-height: 45px;
-      margin-bottom: 5px;
+      min-height: 50px;
+      margin-bottom: 10px;
+      font-weight: 700; /* Bold jokes */
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     h1 {
       color: #ff4d6d;
-      font-size: 1.4rem;
-      margin-bottom: 20px;
+      font-size: 1.6rem;
+      margin-bottom: 25px;
+      white-space: nowrap;
     }
 
-    .buttons-container {
+    .btn-wrap {
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      gap: 15px;
-      min-height: 100px;
+      min-height: 120px;
     }
 
     button {
       font-size: 18px;
       font-weight: 600;
-      padding: 12px 30px;
+      padding: 15px 35px;
       border: none;
       border-radius: 50px;
       cursor: pointer;
@@ -64,14 +72,14 @@
       background: #ff4d6d;
       color: white;
       z-index: 11;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     #no {
       background: #fbafba;
       color: white;
-      position: relative; /* Starts relative, becomes fixed on move */
-      z-index: 12;
+      position: fixed; /* Freedom to move everywhere */
+      z-index: 999;
       transition: 0.1s ease;
     }
   </style>
@@ -79,92 +87,72 @@
 <body>
 
 <div class="card" id="mainCard">
-  <div id="joke-text">Try to click No... if you can! 😉</div>
-  <h1 id="question">Will you be my Valentine? 🌹</h1>
-  <div class="buttons-container">
+  <div id="joke-text">Nice try! 😉</div>
+  <h1>Will you be my Valentine? 🌹</h1>
+  <div class="btn-wrap">
     <button id="yes" onclick="yesClick()">Yes</button>
-    <button id="no" onmouseover="moveNo()" onmousedown="moveNo()">No</button>
   </div>
+  <button id="no" onmouseover="moveNo()" onmousedown="moveNo()" ontouchstart="moveNo()">No</button>
 </div>
 
 <script>
   let clickCount = 0;
-  let yesSize = 1;
+  let yesScale = 1;
 
   const jokes = [
-   const jokes = [
-  "Nice try! 😉", "Not even close!", "Is that all you got?", "Error 404: No not found!", 
-  "You're quite the chaser!", "I can do this all day!", "Almost had it!", "Keep trying!",
-  "Missed me!", "Too slow!", "Are you even trying?", "Wait, did you see that?",
-  "Try again!", "Nope!", "Not today!", "Nice reflex... almost.",
-  "Getting warmer!", "Cold. Very cold.", "You're persistent, I'll give you that!",
-  "Are your fingers tired yet?", "I could do this in my sleep!", "Catch me if you can!",
-  "Is your mouse broken?", "Maybe try a different finger?", "Focus!", "Speed it up!",
-  "I'm over here now!", "Look behind you! (Just kidding, I moved).", "Whoops!",
-  "Denied!", "Access Refused.", "You're clicking air!", "Is that your final answer?",
-  "I'm faster than light!", "You’re lagging!", "Is it the Wi-Fi or just you?",
-  "You almost had it that time!", "I’m blushing... from all this attention.",
-  "Still going?", "You really don't want to say Yes, huh?", "The 'Yes' button is right there!",
-  "Why are you running?", "You're making me dizzy!", "I'm a ninja!", "Ninja move!",
-  "Stealth mode activated!", "You're chasing a ghost!", "I'm like a shadow.",
-  "You're getting a workout today!", "Click faster!", "Is that a yawn I see?",
-  "Don't give up now!", "You're so close... yet so far.", "Magic!", "How did I get over here?",
-  "Teleportation successful.", "I'm invisible!", "You're clicking the wrong spot!",
-  "Try using your left hand!", "Are you a gamer? Because your aim is off!",
-  "Lagging IRL?", "Check your ping!", "Wait for it...", "Now!", "Missed again!",
-  "You're determined!", "I like your spirit!", "But I like my freedom more!",
-  "The 'No' button has left the building.", "Gone fishing!", "BRB, moving again.",
-  "You're adorable when you're frustrated.", "Keep it up!", "Only 900 more to go!",
-  "Just kidding, or am I?", "Are you dizzy yet?", "I'm having fun, are you?",
-  "This is a great game!", "Best game of 2026!", "You're losing!", "Score: Me - 100, You - 0",
-  "Is that a bead of sweat?", "Take a deep breath.", "Now try again!",
-  "I'm feeling generous... just kidding, move!", "Ha! Gotcha!", "Too fast for you.",
-  "You're like a cat chasing a laser!", "Meow!", "Laser focus required!",
-  "Is this your cardio for the day?", "You're doing great, sweetie.",
-  "Stop! Hammer time.", "You can't touch this!", "Seriously?", "Give it up!",
-  "The 'Yes' button is feeling lonely.", "Look at the size of that Yes!",
-  "It's getting harder to miss the Yes, isn't it?", "One more try?", 
-  "I believe in you! (Not really).", "Victory is mine!", "Just say Yes and it stops!"
-];
+    "Nice try! 😉", "Not even close!", "Is that all you got?", "Error 404: No not found!", 
+    "You're quite the chaser!", "I can do this all day!", "Almost had it!", "Keep trying!",
+    "Missed me!", "Too slow!", "Are you even trying?", "Wait, did you see that?",
+    "Try again!", "Nope!", "Not today!", "Nice reflex... almost.",
+    "Getting warmer!", "Cold. Very cold.", "You're persistent, I'll give you that!",
+    "Are your fingers tired yet?", "I could do this in my sleep!", "Catch me if you can!",
+    "Is your mouse broken?", "Maybe try a different finger?", "Focus!", "Speed it up!",
+    "I'm over here now!", "Whoops!", "Denied!", "Access Refused.", "You're clicking air!", 
+    "I'm faster than light!", "You’re lagging!", "Still going?", "The 'Yes' button is right there!",
+    "Why are you running?", "You're making me dizzy!", "I'm a ninja!", "Ninja move!",
+    "You're chasing a ghost!", "You're getting a workout today!", "Click faster!", 
+    "Don't give up now!", "You're so close... yet so far.", "Magic!", 
+    "How did I get over here?", "You're clicking the wrong spot!", "Check your ping!", 
+    "Now try again!", "Ha! Gotcha!", "Victory is mine!", "Just say Yes and it stops!"
   ];
 
   function moveNo() {
     const noBtn = document.getElementById("no");
     const yesBtn = document.getElementById("yes");
     const jokeDisplay = document.getElementById("joke-text");
+    const card = document.getElementById("mainCard");
 
-    // 1. Grow the Yes button
-    yesSize += 0.2;
-    yesBtn.style.transform = `scale(${yesSize})`;
+    // 1. Grow Yes Button and its white border (card)
+    yesScale += 0.18; 
+    yesBtn.style.transform = `scale(${yesScale})`;
+    
+    // Add extra padding to the card as it grows to contain the Yes button
+    const newPadding = 40 + (yesScale * 10);
+    card.style.padding = `${newPadding}px`;
 
-    // 2. Set the 'No' button to fixed so it moves across the whole screen
-    noBtn.style.position = "fixed";
-
-    // 3. Calculate safe boundaries (avoiding screen edges)
-    const padding = 60;
+    // 2. Teleport No Button
+    const padding = 50;
     const maxX = window.innerWidth - noBtn.offsetWidth - padding;
     const maxY = window.innerHeight - noBtn.offsetHeight - padding;
 
     let randomX, randomY;
-    
-    // 4. Ensure the No button doesn't land on the Yes button
     const yesRect = yesBtn.getBoundingClientRect();
     
+    // Logic to ensure 'No' never lands on 'Yes'
     do {
       randomX = Math.max(padding, Math.floor(Math.random() * maxX));
       randomY = Math.max(padding, Math.floor(Math.random() * maxY));
     } while (
-      // If the new 'No' position overlaps with the 'Yes' button, pick again
-      randomX < yesRect.right + 20 &&
-      randomX + noBtn.offsetWidth > yesRect.left - 20 &&
-      randomY < yesRect.bottom + 20 &&
-      randomY + noBtn.offsetHeight > yesRect.top - 20
+      randomX < yesRect.right + 30 &&
+      randomX + noBtn.offsetWidth > yesRect.left - 30 &&
+      randomY < yesRect.bottom + 30 &&
+      randomY + noBtn.offsetHeight > yesRect.top - 30
     );
 
     noBtn.style.left = randomX + "px";
     noBtn.style.top = randomY + "px";
 
-    // 5. Update Joke
+    // 3. Update Bold Joke
     clickCount++;
     jokeDisplay.innerText = jokes[clickCount % jokes.length];
   }
@@ -173,11 +161,12 @@
     const card = document.getElementById("mainCard");
     document.getElementById("no").style.display = "none";
     
+    card.style.padding = "40px"; // Reset padding for final screen
     card.innerHTML = `
       <h1 style='font-size: 2rem;'>I knew it! ❤️</h1>
-      <p style='color: #ff4d6d; font-weight: bold;'>
-        Why did the skeleton go to the Valentine's dance?<br>
-        <span style='color: #333;'>To see his ghoul-friend!</span>
+      <p style='color: #ff4d6d; font-weight: bold; font-size: 1.1rem;'>
+        Why did the cannibal break up with his Valentine?<br>
+        <span style='color: #333;'>Because she just didn't taste right!</span>
       </p>
       <p>Happy Valentine's Day! 😘</p>
     `;
