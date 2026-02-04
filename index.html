@@ -15,43 +15,41 @@
       align-items: center;
       background: #ffe6eb;
       overflow: hidden;
-      touch-action: none;
     }
 
+    /* The white box container */
     .card {
       text-align: center;
       background: white;
-      padding: 50px; 
+      padding: 60px;
       width: 90vw;
-      max-width: 550px;
-      min-height: 400px; 
+      max-width: 600px;
+      min-height: 450px;
       border-radius: 40px;
       box-shadow: 0 15px 50px rgba(0,0,0,0.1);
-      z-index: 10;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      position: relative; /* This is the anchor for the No button */
-      transition: all 0.3s ease-out;
+      position: relative; /* CRITICAL: This keeps 'No' inside the box */
+      transition: all 0.3s ease;
+      z-index: 10;
     }
 
     #joke-text {
       font-size: 1.1rem;
       color: #ff4d6d;
       min-height: 60px;
-      margin-bottom: 10px;
-      font-weight: 800; /* BOLD as requested */
+      font-weight: 800; /* BOLD Jokes */
       text-transform: uppercase;
-      line-height: 1.2;
+      margin-bottom: 10px;
     }
 
     h1 {
       color: #ff4d6d;
       font-size: 1.8rem;
       margin-bottom: 20px;
-      z-index: 11;
-      position: relative;
+      pointer-events: none; /* Prevents text from blocking button clicks */
     }
 
     button {
@@ -66,17 +64,16 @@
     #yes {
       background: #ff4d6d;
       color: white;
-      z-index: 15; /* Keeps it above the card content */
-      position: relative;
+      z-index: 11;
       transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     #no {
       background: #fbafba;
       color: white;
-      position: absolute; /* Locked INSIDE the .card */
-      z-index: 20; /* ALWAYS stay above the Yes button so it's visible */
-      transition: 0.15s ease-out;
+      position: absolute; /* Locked inside .card */
+      z-index: 100; /* Always above everything else */
+      transition: top 0.15s ease, left 0.15s ease;
       white-space: nowrap;
     }
   </style>
@@ -88,7 +85,7 @@
   <h1>Will you be my Valentine? 🌹</h1>
   
   <button id="yes" onclick="yesClick()">Yes</button>
-  <button id="no" onmouseover="moveNo()" onmousedown="moveNo()" ontouchstart="moveNo()">No</button>
+  <button id="no" onmouseover="moveNo()" onmousedown="moveNo()">No</button>
 </div>
 
 <script>
@@ -96,10 +93,10 @@
   let scaleFactor = 1;
 
   const jokes = [
-    "NICE TRY! 😉", "NOT EVEN CLOSE!", "IS THAT ALL YOU GOT?", "ERROR 404: NO NOT FOUND!", 
-    "YOU'RE QUITE THE CHASER!", "I CAN DO THIS ALL DAY!", "ALMOST HAD IT!", "KEEP TRYING!",
-    "MISSED ME!", "TOO SLOW!", "NOPE!", "NOT TODAY!", "I'M A NINJA!", "STILL GOING?", 
-    "DENIED!", "YOU'RE CLICKING AIR!", "VICTORY IS MINE!", "JUST SAY YES!"
+    "NICE TRY! 😉", "NOT EVEN CLOSE!", "IS THAT ALL YOU GOT?", 
+    "YOU'RE QUITE THE CHASER!", "I CAN DO THIS ALL DAY!", 
+    "MISSED ME!", "TOO SLOW!", "NOPE!", "STILL GOING?", 
+    "DENIED!", "YOU'RE CLICKING AIR!", "JUST SAY YES! ❤️"
   ];
 
   function moveNo() {
@@ -108,29 +105,48 @@
     const card = document.getElementById("mainCard");
     const jokeDisplay = document.getElementById("joke-text");
 
-    // 1. Grow the Yes button and the White Card Border
-    scaleFactor += 0.22;
+    // 1. Grow the Yes button and the White Card
+    scaleFactor += 0.25;
     yesBtn.style.transform = `scale(${scaleFactor})`;
     
-    // Expand the white card dimensions so it's "Larger and Longer"
-    card.style.padding = (50 + (scaleFactor * 8)) + "px";
-    card.style.minHeight = (400 + (scaleFactor * 25)) + "px";
+    // Increase card size so the border stays "Longer and Larger"
+    card.style.padding = (60 + (scaleFactor * 5)) + "px";
+    card.style.minHeight = (450 + (scaleFactor * 20)) + "px";
 
-    // 2. Teleport No button ONLY within the white card
-    const cardWidth = card.clientWidth;
-    const cardHeight = card.clientHeight;
-    const btnWidth = noBtn.offsetWidth;
-    const btnHeight = noBtn.offsetHeight;
+    // 2. Teleport No button ONLY within the card boundaries
+    const cardRect = card.getBoundingClientRect();
+    const yesRect = yesBtn.getBoundingClientRect();
+    const btnW = noBtn.offsetWidth;
+    const btnH = noBtn.offsetHeight;
 
-    // We leave a 30px safety margin from the white border edges
-    const margin = 30;
-    const maxX = cardWidth - btnWidth - margin;
-    const maxY = cardHeight - btnHeight - margin;
+    // Boundary calculation
+    const padding = 20;
+    const maxX = card.clientWidth - btnW - padding;
+    const maxY = card.clientHeight - btnH - padding;
 
-    const randomX = Math.max(margin, Math.floor(Math.random() * maxX));
-    const randomY = Math.max(margin, Math.floor(Math.random() * maxY));
+    let randomX, randomY;
+    let safetyCounter = 0;
 
-    // Because the button is 'absolute' inside the card, 0,0 is the top-left of the white box
+    // Logic: Keep trying until we find a spot inside the card 
+    // that isn't covered by the giant Yes button
+    do {
+      randomX = Math.floor(Math.random() * maxX) + (padding / 2);
+      randomY = Math.floor(Math.random() * maxY) + (padding / 2);
+      safetyCounter++;
+
+      // Current position relative to the card's top-left
+      const currentX = randomX + cardRect.left;
+      const currentY = randomY + cardRect.top;
+
+      // Check if this random spot overlaps with the expanding Yes button
+      var isOverlapping = (
+        currentX < yesRect.right + 20 &&
+        currentX + btnW > yesRect.left - 20 &&
+        currentY < yesRect.bottom + 20 &&
+        currentY + btnH > yesRect.top - 20
+      );
+    } while (isOverlapping && safetyCounter < 50);
+
     noBtn.style.left = randomX + "px";
     noBtn.style.top = randomY + "px";
 
