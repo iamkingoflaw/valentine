@@ -15,66 +15,74 @@
       align-items: center;
       background: #ffe6eb;
       overflow: hidden;
+      touch-action: none;
     }
 
-    /* The white box container */
     .card {
       text-align: center;
       background: white;
-      padding: 60px;
+      padding: 40px;
       width: 90vw;
-      max-width: 600px;
-      min-height: 450px;
+      max-width: 500px;
+      height: 500px; 
       border-radius: 40px;
       box-shadow: 0 15px 50px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      position: relative; /* CRITICAL: This keeps 'No' inside the box */
-      transition: all 0.3s ease;
+      position: relative; 
+      overflow: hidden; /* Keeps Yes button contained */
       z-index: 10;
     }
 
     #joke-text {
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: #ff4d6d;
-      min-height: 60px;
-      font-weight: 800; /* BOLD Jokes */
+      min-height: 50px;
+      font-weight: 800;
       text-transform: uppercase;
       margin-bottom: 10px;
+      z-index: 30;
     }
 
     h1 {
       color: #ff4d6d;
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       margin-bottom: 20px;
-      pointer-events: none; /* Prevents text from blocking button clicks */
+      z-index: 30;
+      pointer-events: none;
     }
 
-    button {
+    #yes {
+      background: #ff4d6d;
+      color: white;
       font-size: 20px;
       font-weight: 700;
       padding: 15px 40px;
       border: none;
       border-radius: 50px;
       cursor: pointer;
-    }
-
-    #yes {
-      background: #ff4d6d;
-      color: white;
-      z-index: 11;
-      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 20;
+      transition: transform 0.2s ease;
     }
 
     #no {
       background: #fbafba;
       color: white;
-      position: absolute; /* Locked inside .card */
-      z-index: 100; /* Always above everything else */
-      transition: top 0.15s ease, left 0.15s ease;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 10px 25px;
+      border: none;
+      border-radius: 50px;
+      position: absolute;
+      z-index: 100;
+      /* Smooth transition for the 'magnetic' slide */
+      transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
       white-space: nowrap;
+      left: 50%;
+      top: 70%;
+      transform: translate(-50%, -50%);
     }
   </style>
 </head>
@@ -85,88 +93,84 @@
   <h1>Will you be my Valentine? 🌹</h1>
   
   <button id="yes" onclick="yesClick()">Yes</button>
-  <button id="no" onmouseover="moveNo()" onmousedown="moveNo()">No</button>
+  <button id="no">No</button>
 </div>
 
 <script>
   let clickCount = 0;
-  let scaleFactor = 1;
+  let yesScale = 1;
+  let noScale = 1;
 
   const jokes = [
-    "NICE TRY! 😉", "NOT EVEN CLOSE!", "IS THAT ALL YOU GOT?", 
-    "YOU'RE QUITE THE CHASER!", "I CAN DO THIS ALL DAY!", 
-    "MISSED ME!", "TOO SLOW!", "NOPE!", "STILL GOING?", 
-    "DENIED!", "YOU'RE CLICKING AIR!", "JUST SAY YES! ❤️"
+    "NICE TRY! 😉", "TOO SLOW!", "IS THAT ALL?", "ERROR 404!", 
+    "MISSED ME!", "NOPE!", "STILL GOING?", "DENIED!", 
+    "YOU'RE PERSISTENT!", "JUST SAY YES! ❤️"
   ];
 
-  function moveNo() {
-    const noBtn = document.getElementById("no");
-    const yesBtn = document.getElementById("yes");
-    const card = document.getElementById("mainCard");
-    const jokeDisplay = document.getElementById("joke-text");
+  const noBtn = document.getElementById("no");
+  const card = document.getElementById("mainCard");
 
-    // 1. Grow the Yes button and the White Card
-    scaleFactor += 0.25;
-    yesBtn.style.transform = `scale(${scaleFactor})`;
-    
-    // Increase card size so the border stays "Longer and Larger"
-    card.style.padding = (60 + (scaleFactor * 5)) + "px";
-    card.style.minHeight = (450 + (scaleFactor * 20)) + "px";
+  // Track mouse/touch to create the magnetic effect
+  document.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+  document.addEventListener('touchmove', (e) => {
+    handleMove(e.touches[0].clientX, e.touches[0].clientY);
+  });
 
-    // 2. Teleport No button ONLY within the card boundaries
+  function handleMove(mouseX, mouseY) {
+    const btnRect = noBtn.getBoundingClientRect();
     const cardRect = card.getBoundingClientRect();
-    const yesRect = yesBtn.getBoundingClientRect();
-    const btnW = noBtn.offsetWidth;
-    const btnH = noBtn.offsetHeight;
 
-    // Boundary calculation
-    const padding = 20;
-    const maxX = card.clientWidth - btnW - padding;
-    const maxY = card.clientHeight - btnH - padding;
+    // Calculate center of button
+    const btnCenterX = btnRect.left + btnRect.width / 2;
+    const btnCenterY = btnRect.top + btnRect.height / 2;
 
-    let randomX, randomY;
-    let safetyCounter = 0;
+    // Distance between cursor and button
+    const distance = Math.sqrt(Math.pow(mouseX - btnCenterX, 2) + Math.pow(mouseY - btnCenterY, 2));
 
-    // Logic: Keep trying until we find a spot inside the card 
-    // that isn't covered by the giant Yes button
-    do {
-      randomX = Math.floor(Math.random() * maxX) + (padding / 2);
-      randomY = Math.floor(Math.random() * maxY) + (padding / 2);
-      safetyCounter++;
+    // Magnetic "Push" threshold (how close you have to be)
+    if (distance < 80) {
+      moveNo();
+    }
+  }
 
-      // Current position relative to the card's top-left
-      const currentX = randomX + cardRect.left;
-      const currentY = randomY + cardRect.top;
+  function moveNo() {
+    clickCount++;
+    const jokeDisplay = document.getElementById("joke-text");
+    const yesBtn = document.getElementById("yes");
 
-      // Check if this random spot overlaps with the expanding Yes button
-      var isOverlapping = (
-        currentX < yesRect.right + 20 &&
-        currentX + btnW > yesRect.left - 20 &&
-        currentY < yesRect.bottom + 20 &&
-        currentY + btnH > yesRect.top - 20
-      );
-    } while (isOverlapping && safetyCounter < 50);
+    // 1. Grow Yes Button (inside fixed box)
+    if (yesScale < 5.5) {
+      yesScale += 0.35;
+      yesBtn.style.transform = `scale(${yesScale})`;
+    }
+
+    // 2. Shrink No Button after 15 tries
+    if (clickCount >= 15) {
+      noScale = Math.max(0.2, 1 - ((clickCount - 15) * 0.05));
+    }
+
+    // 3. Smooth Teleport (Magnetic Slide)
+    const padding = 40;
+    const maxX = card.clientWidth - noBtn.offsetWidth - padding;
+    const maxY = card.clientHeight - noBtn.offsetHeight - padding;
+
+    const randomX = Math.floor(Math.random() * maxX) + (padding/2);
+    const randomY = Math.floor(Math.random() * maxY) + (padding/2);
 
     noBtn.style.left = randomX + "px";
     noBtn.style.top = randomY + "px";
+    noBtn.style.transform = `scale(${noScale})`;
 
-    // 3. Update Bold Joke
-    clickCount++;
+    // 4. Update Joke
     jokeDisplay.innerText = jokes[clickCount % jokes.length];
   }
 
   function yesClick() {
     const card = document.getElementById("mainCard");
-    document.getElementById("no").style.display = "none";
-    
-    card.style.minHeight = "auto";
+    noBtn.style.display = "none";
     card.innerHTML = `
-      <h1 style='font-size: 2.5rem;'>I KNEW IT! ❤️</h1>
-      <p style='color: #ff4d6d; font-weight: 800; font-size: 1.2rem;'>
-        WHAT DID THE STAMP SAY TO THE ENVELOPE?<br>
-        <span style='color: #333;'>I'M STUCK ON YOU!</span>
-      </p>
-      <p>Happy Valentine's Day! 😘</p>
+      <h1 style='font-size: 2rem; z-index:40;'>I KNEW IT! ❤️</h1>
+      <p style='color: #ff4d6d; font-weight: 800; z-index:40;'>Happy Valentine's Day! 😘</p>
     `;
     document.body.style.background = "#ffb3c1";
   }
