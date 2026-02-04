@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Will you be my Valentine?</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
@@ -23,66 +23,67 @@
       background: white;
       padding: 30px;
       width: 85%;
-      max-width: 400px;
+      max-width: 350px;
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       z-index: 10;
+      position: relative;
     }
 
     #joke-text {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: #ff4d6d;
-      min-height: 40px;
-      margin-bottom: 10px;
-      font-style: italic;
+      min-height: 45px;
+      margin-bottom: 5px;
     }
 
     h1 {
       color: #ff4d6d;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       margin-bottom: 20px;
     }
 
-    .buttons {
+    .buttons-container {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      gap: 20px;
-      min-height: 150px;
+      gap: 15px;
+      min-height: 100px;
     }
 
     button {
       font-size: 18px;
       font-weight: 600;
-      padding: 12px 25px;
+      padding: 12px 30px;
       border: none;
       border-radius: 50px;
       cursor: pointer;
-      transition: transform 0.1s ease;
     }
 
     #yes {
       background: #ff4d6d;
       color: white;
-      transition: all 0.2s ease;
+      z-index: 11;
+      transition: transform 0.2s ease;
     }
 
     #no {
       background: #fbafba;
       color: white;
-      position: fixed;
-      z-index: 999;
+      position: relative; /* Starts relative, becomes fixed on move */
+      z-index: 12;
+      transition: 0.1s ease;
     }
   </style>
 </head>
 <body>
 
 <div class="card" id="mainCard">
-  <div id="joke-text">Nice try! 😉</div>
+  <div id="joke-text">Try to click No... if you can! 😉</div>
   <h1 id="question">Will you be my Valentine? 🌹</h1>
-  <div class="buttons">
+  <div class="buttons-container">
     <button id="yes" onclick="yesClick()">Yes</button>
-    <button id="no" onmouseover="moveNo()" ontouchstart="moveNo()">No</button>
+    <button id="no" onmouseover="moveNo()" onmousedown="moveNo()">No</button>
   </div>
 </div>
 
@@ -91,52 +92,53 @@
   let yesSize = 1;
 
   const jokes = [
-    "Are you a keyboard? Because you're my type.",
+    "Error 404: No not found!", "Is that your final answer?", 
+    "You're quite the chaser!", "Are you a keyboard? You're my type!",
+    "I can do this all day!", "Almost had it!", "Keep trying!",
+    "Are you a magnet? Because you're attracting 'Yes'!",
     "Is your name Wi-Fi? Because I'm feeling a connection.",
-    "Are you Google? Because you have everything I’m searching for.",
-    "I’m not a photographer, but I can definitely picture us together.",
-    "Are you a parking ticket? Because you’ve got 'FINE' written all over you.",
-    "Do you have a map? I just got lost in your eyes.",
-    "Are you a cat? Because I’m feline a connection.",
-    "My 'No' button is faster than your Wi-Fi!",
-    "Error 404: 'No' option not found.",
-    "Are you sure? My dog already likes you.",
-    "I’ll keep moving until you say yes!",
-    "Are you a magician? Because whenever I look at you, everyone else disappears.",
-    "Do you like Star Wars? Because Yoda only one for me!",
-    "Is your name Autumn? Because I'm falling for you.",
-    "Are you French? Because Eiffel for you.",
-    "Are you a bank loan? Because you have my interest.",
-    "If you were a triangle, you'd be acute one.",
-    "Are you a time traveler? Because I see you in my future.",
-    "Life without you is like a broken pencil... pointless.",
-    "I’m learning about important dates in history. Do you want to be one of them?"
-    // You can add more jokes here! If it hits 20, it will loop.
+    "Nice try, speedster!"
   ];
 
   function moveNo() {
     const noBtn = document.getElementById("no");
-    const jokeDisplay = document.getElementById("joke-text");
     const yesBtn = document.getElementById("yes");
+    const jokeDisplay = document.getElementById("joke-text");
 
-    // 1. Move the button
-    const padding = 50;
+    // 1. Grow the Yes button
+    yesSize += 0.2;
+    yesBtn.style.transform = `scale(${yesSize})`;
+
+    // 2. Set the 'No' button to fixed so it moves across the whole screen
+    noBtn.style.position = "fixed";
+
+    // 3. Calculate safe boundaries (avoiding screen edges)
+    const padding = 60;
     const maxX = window.innerWidth - noBtn.offsetWidth - padding;
     const maxY = window.innerHeight - noBtn.offsetHeight - padding;
-    const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
-    const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
 
-    noBtn.style.position = "fixed";
+    let randomX, randomY;
+    
+    // 4. Ensure the No button doesn't land on the Yes button
+    const yesRect = yesBtn.getBoundingClientRect();
+    
+    do {
+      randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+      randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+    } while (
+      // If the new 'No' position overlaps with the 'Yes' button, pick again
+      randomX < yesRect.right + 20 &&
+      randomX + noBtn.offsetWidth > yesRect.left - 20 &&
+      randomY < yesRect.bottom + 20 &&
+      randomY + noBtn.offsetHeight > yesRect.top - 20
+    );
+
     noBtn.style.left = randomX + "px";
     noBtn.style.top = randomY + "px";
 
-    // 2. Change the joke
+    // 5. Update Joke
     clickCount++;
     jokeDisplay.innerText = jokes[clickCount % jokes.length];
-
-    // 3. Make Yes button grow!
-    yesSize += 0.15;
-    yesBtn.style.transform = `scale(${yesSize})`;
   }
 
   function yesClick() {
@@ -146,8 +148,8 @@
     card.innerHTML = `
       <h1 style='font-size: 2rem;'>I knew it! ❤️</h1>
       <p style='color: #ff4d6d; font-weight: bold;'>
-        Why did the cannibal break up with his Valentine?<br>
-        <span style='color: #333;'>Because she just didn't taste right!</span>
+        Why did the skeleton go to the Valentine's dance?<br>
+        <span style='color: #333;'>To see his ghoul-friend!</span>
       </p>
       <p>Happy Valentine's Day! 😘</p>
     `;
