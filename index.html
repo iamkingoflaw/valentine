@@ -11,9 +11,10 @@
     :root { --primary: #ff4d6d; --secondary: #fbafba; --bg: #ffe6eb; }
     body { margin: 0; height: 100vh; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; background: var(--bg); overflow: hidden; touch-action: none; }
 
+    /* Sunset Silhouette Background */
     #namePortal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+      background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
       background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 1000; padding: 20px; transition: opacity 0.8s ease;
     }
 
@@ -22,170 +23,140 @@
       border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px 25px; border-radius: 30px; box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4); max-width: 420px; width: 85%;
     }
 
-    /* Admin Panel Styling */
-    #adminPanel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; color: #00ff00; font-family: monospace; padding: 20px; display: none; z-index: 5000; overflow-y: auto; font-size: 12px; }
+    /* Main Card UI */
+    .card { 
+      background: white; padding: 40px; width: 90vw; max-width: 450px; height: 550px; 
+      border-radius: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); 
+      display: none; flex-direction: column; align-items: center; 
+      justify-content: space-between; position: relative; overflow: hidden; z-index: 10; 
+    }
 
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
-    .custom-modal { background: white; padding: 30px; border-radius: 30px; width: 90%; max-width: 400px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-    .modal-input, .modal-select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--secondary); border-radius: 12px; outline: none; font-family: 'Poppins'; }
-    .primary-btn { background: var(--primary); color: white; border: none; padding: 15px 25px; border-radius: 50px; cursor: pointer; font-weight: 800; width: 100%; margin-top: 15px; }
+    #valentineTitle { color: var(--primary); font-size: 1.8rem; text-align: center; font-weight: 800; margin-top: 20px; z-index: 100; }
+    #joke-text { color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 0.75rem; height: 50px; text-align: center; z-index: 100; line-height: 1.2; padding: 0 10px; }
 
-    .card { background: white; padding: 40px; width: 90vw; max-width: 450px; height: 550px; border-radius: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); display: none; flex-direction: column; align-items: center; justify-content: space-between; position: relative; overflow: hidden; z-index: 10; }
-    #no { background: var(--secondary); color: white; padding: 10px 25px; border: none; border-radius: 50px; position: absolute; z-index: 200; transition: top 0.3s, left 0.3s; cursor: pointer; white-space: nowrap; }
-    #yes { background: var(--primary); color: white; font-size: 22px; font-weight: 700; padding: 15px 50px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.3s; }
+    /* Button Styling */
+    .yes-wrapper { flex-grow: 1; display: flex; align-items: center; justify-content: center; width: 100%; }
+    #yes { background: var(--primary); color: white; font-size: 20px; font-weight: 700; padding: 15px 45px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.2s; z-index: 50; }
+    #no { background: var(--secondary); color: white; padding: 12px 25px; border: none; border-radius: 50px; position: absolute; cursor: pointer; transition: all 0.2s ease; z-index: 200; bottom: 50px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
   </style>
 </head>
 <body>
 
-  <div id="adminPanel">
-    <h2>🕵️ SECRETS LOG (Local Stats)</h2>
-    <div id="statsContent">No stats yet...</div>
-    <button onclick="document.getElementById('adminPanel').style.display='none'" style="background:red; color:white; border:none; padding:10px; margin-top:20px; cursor:pointer;">EXIT ADMIN MODE</button>
-  </div>
-
-  <div id="modalOverlay" class="modal-overlay">
-    <div class="custom-modal">
-      <h2 style="color: var(--primary); margin: 0 0 10px 0;">Create Your Link</h2>
-      <div id="step1" style="width: 100%;">
-        <input type="text" id="creatorInput" class="modal-input" placeholder="Your Name" oninput="updateSuggestions()">
-        <input type="text" id="targetInput" class="modal-input" placeholder="Their Name" oninput="updateSuggestions()">
-        <select id="suggestionBox" class="modal-select" onchange="selectSuggestion()">
-          <option value="">✨ Suggested Messages...</option>
-        </select>
-        <textarea id="msgInput" class="modal-input" placeholder="Custom message (optional)" rows="3"></textarea>
-        <button class="primary-btn" onclick="processLinkGeneration()">Generate Link</button>
-      </div>
-      <div id="step2" style="display: none; width: 100%;">
-        <p style="font-size: 0.9rem;">Ready for <span id="displayTarget" style="font-weight: 800; color: var(--primary);"></span>!</p>
-        <div id="urlDisplay" style="background:#fdf2f4; padding:10px; border-radius:10px; font-size:0.7rem; word-break:break-all; border:1px dashed var(--primary);"></div>
-        <button class="primary-btn" id="copyBtn" onclick="copyGeneratedUrl()">Copy Link & Close</button>
-      </div>
-      <p style="font-size: 0.8rem; color: #999; cursor: pointer; margin-top: 15px;" onclick="closeModal()">Close</p>
-    </div>
-  </div>
-
   <div id="namePortal">
     <div class="glass-box">
-      <h1 id="introText" style="color: white; font-weight: 800;">My heart is locked.</h1>
-      <p id="customText" style="color:white; margin-bottom:20px; font-style: italic; font-size: 0.95rem; opacity: 0; transition: opacity 2s ease;"></p>
-      <input type="text" id="userName" style="padding: 15px; border-radius: 50px; border: none; width: 80%; text-align: center;" placeholder="Your name..." onkeydown="if(event.key==='Enter') startApp()">
+      <h1 style="color: white; font-weight: 800;">My heart is locked.</h1>
+      <p id="customText" style="color:white; margin-bottom:20px; font-style: italic;"></p>
+      <input type="text" id="userName" style="padding: 15px; border-radius: 50px; border: none; width: 85%; text-align: center;" placeholder="Your name..." onkeydown="if(event.key==='Enter') startApp()">
       <button onclick="startApp()" style="background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: 800; cursor: pointer; margin-top: 20px;">Unlock My Heart</button>
-      <p style="color:white; font-size:0.75rem; margin-top:20px; opacity:0.8; cursor:pointer; text-decoration: underline;" onclick="openModal()">Create your own link</p>
     </div>
   </div>
 
   <div class="card" id="mainCard">
-    <div id="joke-text" style="color:var(--primary); font-weight:800; text-transform:uppercase; font-size: 0.8rem;">CATCH ME! 😉</div>
-    <h1 id="valentineTitle" style="color: var(--primary); font-weight: 800; text-align: center;">Will you be my Valentine? 🌹</h1>
-    <div style="flex-grow:1; display:flex; align-items:center;"><button id="yes" onclick="yesClick()">Yes</button></div>
-    <button id="no">No</button>
+    <div id="joke-text">THINK CAREFULLY... 😈</div>
+    <h1 id="valentineTitle">Will you be my Valentine?</h1>
+    <div class="yes-wrapper">
+      <button id="yes" onclick="yesClick()">Yes</button>
+    </div>
+    <button id="no" onmouseover="moveNo()">No</button>
   </div>
 
 <script>
-  let visitorName = "", struggleCount = 0, yesScale = 1, generatedUrl = "";
-  const ADMIN_CODE = "ADMIN123"; // CHANGE THIS CODE TO YOUR OWN
+  let visitorName = "", clickCount = 0, yesScale = 1, threadId = null;
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
-  const params = new URLSearchParams(window.location.search);
-  let sharedBy = params.get('from'), customMsg = params.get('msg');
+  const taunts = [
+    "I HAVE YOUR IP ADDRESS! 📍", "SAY NO & I LEAK THE SEARCH HISTORY 🔍", "I'M OUTSIDE YOUR HOUSE RN 🏠",
+    "CLICK YES OR I DELETE YOUR ROBLOX 🎮", "THE POLICE ARE ON THE WAY 👮", "YOUR PHONE WILL EXPLODE IN 5... 💣",
+    "I WILL TELL YOUR CRUSH YOU LIKE NICKI MINAJ 🎤", "I KNOW WHERE YOU LIVE 🗺️", "SAY NO AND I STEAL YOUR CAT 🐈",
+    "JUST CLICK IT ALREADY 🙄", "YOU'RE EMBARRASSING YOURSELF 🤡", "I'VE SENT THIS TO YOUR MOM 📱",
+    "DON'T MAKE ME CALL YOUR BOSS 💼", "I'M TRACKING YOUR MOUSE 🖱️", "WRONG CHOICE! ❌", "YOU CAN'T HIDE 🕵️",
+    "I WILL REPLACE YOUR SHAMPOO WITH GLUE 🧴", "SAY NO AND I SPOIL THE ENDING OF YOUR FAV SHOW 📺",
+    "THE 'YES' BUTTON IS GETTING HUNGRY 😋", "RESISTANCE IS FUTILE 🤖", "I WILL UNFOLLOW YOU ON EVERYTHING 📱",
+    "YOUR WIFI IS ABOUT TO DISCONNECT 📶", "I WILL TELL EVERYONE YOU DON'T SHOWER 🧼", "THIS IS A HOSTAGE SITUATION 🔫",
+    "I'M NOT MAD, JUST DISAPPOINTED 😔", "CLICK YES OR I CANCEL YOUR NETFLIX 🍿", "I WILL EAT YOUR LUNCH 🍱",
+    "YOU'RE SO SLOW 🐢", "I WILL HIDE YOUR LEFT SHOE 👟", "SAY NO AND I SEND YOUR BROWSER TABS TO YOUR DAD 📁",
+    "YOU LOOK CUTE WHEN YOU'RE STRUGGLING 🥰", "ARE YOU TIRED YET? 😴", "I WILL OVERCOOK YOUR PASTA 🍝",
+    "SAY NO AND I DE-ICE YOUR FRIDGE ❄️", "I WILL LEAVE YOUR FRONT DOOR SLIGHTLY AJAR 🚪", "I'M SENDING A CLOWN TO YOUR HOUSE 🤡",
+    "I WILL PUT SALT IN YOUR COFFEE ☕", "YOU'RE RUNNING OUT OF SPACE 📉", "I'M ALREADY IN YOUR WALLS 🧱",
+    "I WILL DRAW A MUSTACHE ON YOUR FAV POSTER 🎨", "SAY NO AND I STEAL YOUR CHARGER 🔋", "I'M JUDGING YOU HARD RN 🤨",
+    "I WILL MAKE YOUR PILLOW WARM ON BOTH SIDES 🛌", "I'M DELETING YOUR MINECRAFT WORLD ⛏️", "JUST GIVE UP 🏳️",
+    "I WILL RE-ARRANGE YOUR APPS 📱", "I WILL TELL EVERYONE YOU'RE A FAN OF SKIBIDI TOILET 🚽", "YOU'RE TRAPPED 🕸️",
+    "I WILL PUT A SPIDER IN YOUR ROOM 🕷️", "SAY NO AND I TELL YOUR EX YOU STILL MISS THEM 💔",
+    "I WILL SEND ANONYMOUS PIZZAS TO YOUR HOUSE (YOU PAY) 🍕", "YOU'RE MAKING ME CRY 😢", "I WILL PUT A LOUD ALARM AT 3 AM ⏰",
+    "SAY NO AND I CHANGE YOUR WALLPAPER TO MY FACE 👹", "I WILL REPLACE YOUR SOCKS WITH DAMP ONES 🧦", "YOU'RE SO PREDICTABLE 🔮",
+    "I WILL TELL YOUR BEST FRIEND YOUR DEEPEST SECRET 🤐", "I'M POSTING YOUR CRINGE PHOTOS 📸", "YOU HAVE 3 SECONDS... ⏱️",
+    "I WILL LOWER THE VOLUME ON YOUR HEADPHONES 🎧", "SAY NO AND I DELETE YOUR PLAYLIST 🎵", "YOU'RE SWEATING, AREN'T YOU? 💦",
+    "I WILL PUT PET HAIR ON ALL YOUR CLOTHES 🐕", "I'M CALLING YOUR GRANDMA 👵", "SAY NO AND I EAT YOUR LAST COOKIE 🍪",
+    "I WILL CHANGE YOUR AUTO-CORRECT ✍️", "YOU'RE LOOSING THIS BATTLE ⚔️", "I WILL SPOIL EVERY MOVIE FOR YOU 🎬",
+    "SAY NO AND I TELL EVERYONE YOU'RE SHORT 📏", "I WILL MOVE YOUR FURNITURE BY 1 INCH 🛋️", "YOU'RE ALMOST THERE! (NOT) 🚩",
+    "I WILL PUT A ROCK IN YOUR SHOE 🪨", "SAY NO AND I REPORT YOUR INSTAGRAM 🚫", "I WILL TELL THE GROUP CHAT EVERYTHING 🗣️",
+    "YOU'RE SO FRAGILE 🧊", "I WILL UNTIE YOUR SHOES 👟", "SAY NO AND I PUT LEGOS ON YOUR FLOOR 🧱",
+    "I WILL CHANGE YOUR ALARM SOUND TO A SCREAM 📢", "YOU'RE STUCK WITH ME FOREVER 🔗", "I WILL DRINK ALL THE MILK 🥛",
+    "SAY NO AND I DELETE YOUR SAVED PASSWORDS 🔑", "I'M WATCHING YOU THROUGH THE WEBCAM (SIKE) 📹", "YOU'RE FAILING THE TEST 📝",
+    "I WILL PUT A THUMBTACK ON YOUR CHAIR 📍", "SAY NO AND I TELL YOUR CRUSH YOU SMELL 👃", "I WILL RE-LOCK THE DOOR 🔒",
+    "YOU'RE THE CHOSEN ONE... TO SAY YES 🌟", "I WILL STEAL ALL YOUR PENS 🖋️", "SAY NO AND I HIDE YOUR KEYS 🔑",
+    "I WILL LEAVE ONE CRUMB IN YOUR BED 🍞", "YOU'RE DOOMED 💀", "I WILL TELL THE INTERNET YOU'RE A BOT 🤖",
+    "SAY NO AND I ACCIDENTALLY CLICK 'REPLY ALL' 📧", "I WILL MESS UP YOUR SPOTIFY WRAPPED 🎧", "YOU'RE RUNNING OUT OF TIME! ⌛",
+    "I WILL PUT A TINY HOLE IN ALL YOUR SOCKS 🧦", "SAY NO AND I TELL THE WORLD YOU'RE A CRYBABY 👶", "YOU WIN... IF YOU CLICK YES 🏆",
+    "I WILL SEND YOU A VERY DISAPPOINTING EMAIL 📧", "SAY NO AND I SPOIL YOUR FAV BOOK 📚", "YOU'RE THE REASON I HAVE TRUST ISSUES 💔"
+  ];
 
-  const noMessages = [
-    "No", "Are you sure?", "NICE TRY!", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "DENIED!", "Wrong button!", "Try again!", "Is your mouse broken?", "Just click Yes! ❤️"
-  ]; // Dynamic messages for the 'No' button
+  async function trackEvent(event) {
+    const url = threadId ? `${WEBHOOK_URL}?thread_id=${threadId}` : WEBHOOK_URL;
+    const payload = {
+      content: `**${event}**`,
+      username: visitorName || "Valentine Bot",
+      ...( !threadId && { thread_name: `Session: ${visitorName || "Guest"}` } )
+    };
 
-  window.onload = () => {
-    if(params.get('to')) document.getElementById('userName').value = params.get('to');
-    if(customMsg) {
-      const msgEl = document.getElementById('customText');
-      msgEl.innerText = `"${decodeURIComponent(customMsg)}"`;
-      setTimeout(() => { msgEl.style.opacity = "1"; }, 500);
-    }
-    trackEvent("Page Opened");
-  };
-
-  function trackEvent(event) {
-    let report = `🔄 **Valentine Update**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}`;
-    if (customMsg) report += `\n**Reading Message:** "${decodeURIComponent(customMsg)}"`;
-    if (struggleCount > 0) report += `\n**Struggle Level:** ${struggleCount} misses`;
-    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content: report }) });
+    try {
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!threadId && res.ok) { const data = await res.json(); threadId = data.id; }
+    } catch (e) {}
   }
 
   function startApp() {
-    const input = document.getElementById('userName').value.trim();
-    if(!input) return;
-    
-    // Check for Secret Admin Mode
-    if(input.toUpperCase() === ADMIN_CODE) {
-      document.getElementById('adminPanel').style.display = 'block';
-      return;
-    }
-
-    visitorName = input;
-    trackEvent("Heart Unlocked");
+    visitorName = document.getElementById('userName').value.trim();
+    if(!visitorName) return;
+    trackEvent("Heart Unlocked 🔓");
     document.getElementById('namePortal').style.display = "none";
     document.getElementById('mainCard').style.display = "flex";
   }
 
   function moveNo() {
-    struggleCount++;
+    clickCount++;
     const card = document.getElementById("mainCard");
     const noBtn = document.getElementById("no");
     const yesBtn = document.getElementById("yes");
 
-    // Dynamic Text Update
-    noBtn.innerText = noMessages[Math.min(struggleCount, noMessages.length - 1)];
+    // Position boundaries to avoid overlapping header
+    const maxX = card.clientWidth - noBtn.offsetWidth - 50;
+    const maxY = card.clientHeight - noBtn.offsetHeight - 50;
+    const minY = 160; 
 
-    // Move Button
-    noBtn.style.left = (Math.random() * (card.clientWidth - 100)) + "px";
-    noBtn.style.top = (Math.random() * (card.clientHeight - 100)) + "px";
+    noBtn.style.left = (Math.random() * maxX) + "px";
+    noBtn.style.top = (Math.random() * (maxY - minY) + minY) + "px";
 
-    // Grow Yes Button
-    if (yesScale < 3) {
-      yesScale += 0.15;
-      yesBtn.style.transform = `scale(${yesScale})`;
-    }
-
-    // Every 5 struggles, log to Discord
-    if (struggleCount % 5 === 0) {
-      trackEvent(`User struggling: ${struggleCount} failed attempts at 'No'`);
-    }
+    // Yes button growth
+    yesScale += 0.25;
+    yesBtn.style.transform = `scale(${yesScale})`;
+    
+    // Cycle through 100 unique taunts
+    document.getElementById("joke-text").innerText = taunts[clickCount % taunts.length];
+    
+    if(clickCount % 3 === 0) trackEvent(`Struggling: ${clickCount} misses`);
   }
-
-  document.getElementById("no").onmouseover = moveNo;
 
   function yesClick() {
-    trackEvent(`SAID YES! ❤️ (Final Struggle Count: ${struggleCount})`);
+    trackEvent("ACCEPTED! ❤️💍");
     confetti({ particleCount: 150, spread: 70 });
-    document.getElementById("mainCard").innerHTML = `<h1 style="color:var(--primary)">SUCCESS! ❤️</h1><p>It took you ${struggleCount} tries to say Yes!</p><button class="primary-btn" onclick="openModal()" style="width: auto; padding: 10px 30px;">Create Your Own</button>`;
-  }
-
-  /* Shared Link & Suggestions Logic */
-  function updateSuggestions() {
-    const from = document.getElementById('creatorInput').value.trim() || "Me";
-    const to = document.getElementById('targetInput').value.trim() || "You";
-    const suggestions = [`A special request from ${from} to ${to} ❤️`, `${to}, will you make ${from} the happiest person?`];
-    const select = document.getElementById('suggestionBox');
-    select.innerHTML = '<option value="">✨ Suggested Messages...</option>' + suggestions.map(s => `<option value="${s}">${s}</option>`).join('');
-  }
-  function selectSuggestion() { document.getElementById('msgInput').value = document.getElementById('suggestionBox').value; }
-  function openModal() { document.getElementById('modalOverlay').style.display = 'flex'; updateSuggestions(); }
-  function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-  function processLinkGeneration() {
-    const creator = document.getElementById('creatorInput').value.trim();
-    const target = document.getElementById('targetInput').value.trim();
-    const msg = document.getElementById('msgInput').value.trim();
-    if (!creator || !target) return alert("Fill names first!");
-    generatedUrl = `${window.location.href.split('?')[0]}?from=${encodeURIComponent(creator)}&to=${encodeURIComponent(target)}&msg=${encodeURIComponent(msg)}`;
-    document.getElementById('step1').style.display = 'none';
-    document.getElementById('step2').style.display = 'block';
-    document.getElementById('displayTarget').innerText = target;
-    document.getElementById('urlDisplay').innerText = generatedUrl;
-  }
-  function copyGeneratedUrl() {
-    navigator.clipboard.writeText(generatedUrl).then(() => {
-      document.getElementById('copyBtn').innerText = "Copied! ✅";
-      setTimeout(() => { closeModal(); document.getElementById('copyBtn').innerText = "Copy Link & Close"; }, 1000);
-    });
+    document.getElementById("mainCard").innerHTML = `
+      <div style="text-align:center; margin:auto; padding:20px;">
+        <h1 style="color:var(--primary)">I KNEW YOU'D SUBMIT! ❤️</h1>
+        <p>You tried to escape <b>${clickCount}</b> times. Pathetic.</p>
+        <p style="font-size:0.8rem; opacity:0.7;">Your surrender has been logged.</p>
+      </div>
+    `;
   }
 </script>
 </body>
