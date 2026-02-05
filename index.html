@@ -40,11 +40,9 @@
       <div id="step1" style="width: 100%;">
         <input type="text" id="creatorInput" class="modal-input" placeholder="Your Name" oninput="updateSuggestions()">
         <input type="text" id="targetInput" class="modal-input" placeholder="Their Name" oninput="updateSuggestions()">
-        
         <select id="suggestionBox" class="modal-select" onchange="selectSuggestion()">
           <option value="">✨ Suggested Messages...</option>
         </select>
-        
         <textarea id="msgInput" class="modal-input" placeholder="Custom message (optional)" rows="3"></textarea>
         <button class="primary-btn" onclick="processLinkGeneration()">Generate Link</button>
       </div>
@@ -60,7 +58,7 @@
   <div id="namePortal">
     <div class="glass-box">
       <h1 id="introText" style="color: white; font-weight: 800;">My heart is locked.</h1>
-      <p id="customText" style="color:white; margin-bottom:20px; font-style: italic;"></p>
+      <p id="customText" style="color:white; margin-bottom:20px; font-style: italic; font-size: 0.95rem; opacity: 0; transition: opacity 2s ease;"></p>
       <input type="text" id="userName" style="padding: 15px; border-radius: 50px; border: none; width: 80%; text-align: center;" placeholder="Your name..." onkeydown="if(event.key==='Enter') startApp()">
       <button onclick="startApp()" style="background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: 800; cursor: pointer; margin-top: 20px;">Unlock My Heart</button>
       <p style="color:white; font-size:0.75rem; margin-top:20px; opacity:0.8; cursor:pointer; text-decoration: underline;" onclick="openModal()">Create your own link</p>
@@ -83,7 +81,11 @@
 
   window.onload = () => {
     if(params.get('to')) document.getElementById('userName').value = params.get('to');
-    if(customMsg) document.getElementById('customText').innerText = `"${decodeURIComponent(customMsg)}"`;
+    if(customMsg) {
+      const msgEl = document.getElementById('customText');
+      msgEl.innerText = `"${decodeURIComponent(customMsg)}"`;
+      setTimeout(() => { msgEl.style.opacity = "1"; }, 500); // Romantic fade-in
+    }
     trackEvent(sharedBy ? `Opened (From ${sharedBy})` : "Opened Direct");
   };
 
@@ -100,7 +102,7 @@
       `Can ${from} be your Valentine, ${to}?`,
       `${to}, ${from} is officially asking...`,
       `Life is better with ${to}, says ${from}.`,
-      `To ${to}: You stolen ${from}'s heart!`
+      `To ${to}: You've stolen ${from}'s heart!`
     ];
     const select = document.getElementById('suggestionBox');
     select.innerHTML = '<option value="">✨ Suggested Messages...</option>' + 
@@ -115,11 +117,20 @@
     const creator = document.getElementById('creatorInput').value.trim();
     const target = document.getElementById('targetInput').value.trim();
     const msg = document.getElementById('msgInput').value.trim();
-    if (!creator || !target) return alert("Fill names first!");
+    if (!creator || !target) return alert("Please enter both names!");
     
     const base = window.location.href.split('?')[0];
     generatedUrl = `${base}?from=${encodeURIComponent(creator)}&to=${encodeURIComponent(target)}&msg=${encodeURIComponent(msg)}`;
     
+    // Log the link generation and the custom message to Discord
+    fetch(WEBHOOK_URL, { 
+      method: 'POST', 
+      headers: {'Content-Type': 'application/json'}, 
+      body: JSON.stringify({ 
+        content: `🚀 **New Viral Link Created!**\n**By:** ${creator}\n**For:** ${target}\n**Message:** "${msg || "None"}"\n**URL:** ${generatedUrl}` 
+      }) 
+    });
+
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
     document.getElementById('displayTarget').innerText = target;
@@ -156,7 +167,10 @@
   }
 
   function trackEvent(event) {
-    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content: `🔄 **Valentine Update**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}` }) });
+    let report = `🔄 **Valentine Update**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}`;
+    if (customMsg) report += `\n**Reading Message:** "${decodeURIComponent(customMsg)}"`;
+    
+    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content: report }) });
   }
 </script>
 </body>
