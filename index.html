@@ -36,7 +36,6 @@
       z-index: 10;
     }
 
-    /* Keeps text on the very top layer */
     .header-info {
       z-index: 100;
       position: relative;
@@ -59,7 +58,6 @@
       line-height: 1.2;
     }
 
-    /* Container to keep Yes button centered and contained */
     .yes-wrapper {
       flex-grow: 1;
       display: flex;
@@ -91,12 +89,19 @@
       border: none;
       border-radius: 50px;
       position: absolute;
-      z-index: 200; /* Always on top of everything */
-      transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
+      z-index: 200;
+      /* Smooth magnetic transition */
+      transition: top 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), left 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
       white-space: nowrap;
       left: 50%;
       top: 80%;
       transform: translate(-50%, -50%);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(2.5); box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.7); }
+      70% { transform: scale(2.6); box-shadow: 0 0 0 20px rgba(255, 77, 109, 0); }
+      100% { transform: scale(2.5); box-shadow: 0 0 0 0 rgba(255, 77, 109, 0); }
     }
   </style>
 </head>
@@ -118,7 +123,6 @@
 <script>
   let clickCount = 0;
   let yesScale = 1;
-  let noScale = 1;
 
   const jokes = [
     "NICE TRY! 😉", "TOO SLOW!", "IS THAT ALL?", "ERROR 404!", 
@@ -131,10 +135,14 @@
   const yesBtn = document.getElementById("yes");
   const jokeDisplay = document.getElementById("joke-text");
 
-  // Magnetic tracking
+  // Magnetic distance check
   const handleInput = (x, y) => {
     const btnRect = noBtn.getBoundingClientRect();
-    const dist = Math.sqrt(Math.pow(x - (btnRect.left + btnRect.width/2), 2) + Math.pow(y - (btnRect.top + btnRect.height/2), 2));
+    const btnCenterX = btnRect.left + btnRect.width / 2;
+    const btnCenterY = btnRect.top + btnRect.height / 2;
+    const dist = Math.sqrt(Math.pow(x - btnCenterX, 2) + Math.pow(y - btnCenterY, 2));
+    
+    // If cursor/touch gets within 80px, it moves
     if (dist < 80) moveNo();
   };
 
@@ -144,32 +152,27 @@
   function moveNo() {
     clickCount++;
 
-    // 1. SMART YES GROWTH (Doesn't become "ugly")
+    // 1. Yes Button Growth (Caps at 2.5x then pulses)
     if (yesScale < 2.5) { 
-      yesScale += 0.15; // Grows slower and smoother
+      yesScale += 0.15;
       yesBtn.style.transform = `scale(${yesScale})`;
     } else {
-      // Once big enough, it pulses instead of growing more
       yesBtn.style.animation = "pulse 1.5s infinite";
     }
 
-    // 2. NO SIZE LOGIC
-    if (clickCount <= 5) {
-      noScale = 1;
-    } else if (clickCount > 5 && clickCount <= 15) {
-      noScale = Math.max(0.4, 1 - ((clickCount - 5) * 0.08));
-    } else {
-      noScale += 0.05; // Starts growing back
-    }
-
-    // 3. INTERNAL TELEPORT
+    // 2. No Button Movement (Keeps original size)
     const pad = 50;
     const maxX = card.clientWidth - noBtn.offsetWidth - pad;
     const maxY = card.clientHeight - noBtn.offsetHeight - pad;
-    noBtn.style.left = (Math.floor(Math.random() * maxX) + pad/2) + "px";
-    noBtn.style.top = (Math.floor(Math.random() * maxY) + pad/2) + "px";
-    noBtn.style.transform = `scale(${noScale})`;
 
+    // Calculate new position inside the box
+    const randomX = Math.floor(Math.random() * maxX) + pad/2;
+    const randomY = Math.floor(Math.random() * maxY) + pad/2;
+
+    noBtn.style.left = randomX + "px";
+    noBtn.style.top = randomY + "px";
+
+    // 3. Update Jokes
     jokeDisplay.innerText = jokes[clickCount % jokes.length];
   }
 
@@ -184,14 +187,6 @@
     document.body.style.background = "#ffb3c1";
   }
 </script>
-
-<style>
-  @keyframes pulse {
-    0% { transform: scale(2.5); box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.7); }
-    70% { transform: scale(2.6); box-shadow: 0 0 0 20px rgba(255, 77, 109, 0); }
-    100% { transform: scale(2.5); box-shadow: 0 0 0 0 rgba(255, 77, 109, 0); }
-  }
-</style>
 
 </body>
 </html>
