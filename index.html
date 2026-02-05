@@ -26,11 +26,11 @@
       touch-action: none;
     }
 
-    /* Updated High-Resolution Romantic Background from Unsplash */
+    /* EXACT UNSPLASH BACKGROUND REQUESTED */
     #namePortal {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+      background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
       background-size: cover;
       display: flex;
       flex-direction: column;
@@ -42,12 +42,12 @@
       transition: opacity 0.8s ease;
     }
 
-    /* Premium Glassmorphism UI */
+    /* PREMIUM GLASSMORPISM UI */
     .glass-box {
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(15px);
       -webkit-backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       padding: 40px 25px;
       border-radius: 30px;
       box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4);
@@ -75,7 +75,6 @@
       background: rgba(255, 255, 255, 0.9);
       color: #333;
       text-align: center;
-      box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
     }
 
     #namePortal button {
@@ -87,13 +86,9 @@
       font-weight: 800;
       font-size: 1rem;
       cursor: pointer;
-      transition: all 0.3s ease;
       box-shadow: 0 6px 20px rgba(255, 77, 109, 0.5);
     }
 
-    #namePortal button:hover { transform: scale(1.05); }
-
-    /* Shake Animation for Validation */
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-10px); }
@@ -101,7 +96,6 @@
     }
     .shake-error { animation: shake 0.4s ease-in-out; background-color: #d00000 !important; }
 
-    /* The Main Game Card */
     .card {
       background: white;
       padding: 40px;
@@ -149,12 +143,6 @@
       transition: top 0.3s ease, left 0.3s ease;
       white-space: nowrap;
       left: 50%; top: 80%; transform: translate(-50%, -50%);
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(2.5); }
-      70% { transform: scale(2.6); }
-      100% { transform: scale(2.5); }
     }
   </style>
 </head>
@@ -283,12 +271,7 @@
   function moveNo() {
     clickCount++;
     const yesBtn = document.getElementById("yes");
-    if (yesScale < 2.5) { 
-      yesScale += 0.15; 
-      yesBtn.style.transform = `scale(${yesScale})`; 
-    } else { 
-      yesBtn.style.animation = "pulse 1.5s infinite"; 
-    }
+    if (yesScale < 2.5) { yesScale += 0.15; yesBtn.style.transform = `scale(${yesScale})`; } 
 
     const card = document.getElementById("mainCard");
     const noBtn = document.getElementById("no");
