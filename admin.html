@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Valentine Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #1a1a1a; color: #00ff00; padding: 40px; }
+        .session-card { background: #2a2a2a; border: 1px solid #444; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        .tag { padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; font-weight: bold; }
+        .success { background: #00ff00; color: #000; }
+        .active { background: #ffd700; color: #000; }
+        h1 { color: #ff4d6d; }
+    </style>
+</head>
+<body>
+    <h1>🕵️ Master Admin Dashboard</h1>
+    <p>Viewing live sessions from your Discord logs...</p>
+    <hr border="1" color="#444">
+    
+    <div id="logContainer">
+        <div class="session-card">
+            <h3>Session: ALEX <span class="tag success">ACCEPTED ❤️</span></h3>
+            <p><strong>IP:</strong> 2a02:8440:b50e... [cite: -]</p>
+            <p><strong>Misses:</strong> 14 [cite: -]</p>
+            <p><strong>Activity:</strong> 
+                <br> - [19:22] Page Opened [cite: -]
+                <br> - [19:23] Heart Unlocked [cite: -]
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Note: To make this fully automated, you would connect this 
+        // to a database. For now, it serves as a UI template for 
+        // your secret manual logs.
+        console.log("Admin Dashboard Loaded.");
+    </script>
+</body>
+</html>
