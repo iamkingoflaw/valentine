@@ -11,6 +11,7 @@
     :root { --primary: #ff4d6d; --secondary: #fbafba; --bg: #ffe6eb; --gold: #ffd700; }
     body { margin: 0; height: 100vh; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; background: var(--bg); overflow: hidden; touch-action: none; }
 
+    /* Sunset Silhouette Background */
     #namePortal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
@@ -39,16 +40,26 @@
 
     /* CARD UI */
     .card { background: white; padding: 40px; width: 90vw; max-width: 450px; height: 550px; border-radius: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); display: none; flex-direction: column; align-items: center; justify-content: space-between; position: relative; overflow: hidden; z-index: 10; }
+    
     #valentineTitle { color: var(--primary); font-size: 1.8rem; text-align: center; font-weight: 800; margin-top: 20px; z-index: 100; pointer-events: none;}
     #joke-text { color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 0.75rem; height: 60px; text-align: center; z-index: 100; line-height: 1.2; padding: 0 10px; pointer-events: none;}
     
     #yes { background: var(--primary); color: white; font-size: 20px; font-weight: 700; padding: 15px 45px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.2s; z-index: 50; }
-    #no { background: var(--secondary); color: white; padding: 12px 25px; border: none; border-radius: 50px; position: absolute; cursor: pointer; transition: all 0.15s ease; z-index: 200; bottom: 60px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+    
+    /* NO BUTTON FIXED - NO MORE VERTICAL STRETCHING */
+    #no { 
+      background: var(--secondary); color: white; 
+      width: 100px; height: 45px; /* Fixed size to prevent stretching */
+      display: flex; align-items: center; justify-content: center;
+      border: none; border-radius: 50px; 
+      position: absolute; cursor: pointer; transition: all 0.15s ease; 
+      z-index: 200; bottom: 60px; left: 50%; transform: translateX(-50%); 
+    }
 
     /* MODAL UI */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(8px); }
     .custom-modal { background: white; padding: 30px; border-radius: 30px; width: 90%; max-width: 400px; text-align: center; }
-    .modal-input, .modal-select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--secondary); border-radius: 12px; outline: none; font-family: 'Poppins'; box-sizing: border-box; font-size: 0.9rem;}
+    .modal-input, .modal-select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--secondary); border-radius: 12px; outline: none; font-family: 'Poppins'; box-sizing: border-box;}
     .primary-btn { background: var(--primary); color: white; border: none; padding: 15px 25px; border-radius: 50px; cursor: pointer; font-weight: 800; width: 100%; margin-top: 15px; }
   </style>
 </head>
@@ -61,13 +72,13 @@
         <input type="text" id="creatorInput" class="modal-input" placeholder="Your Name" oninput="updateSuggestions()">
         <input type="text" id="targetInput" class="modal-input" placeholder="Their Name" oninput="updateSuggestions()">
         
-        <p id="suggestionHeader" style="font-size: 0.8rem; color: var(--primary); font-weight: 800; margin: 12px 0 5px 0;">Enter your partner name to show messages</p>
+        <p style="font-size: 0.8rem; color: var(--primary); font-weight: 800; margin: 12px 0 5px 0;">Enter your partner name to show messages</p>
         
         <select id="suggestionBox" class="modal-select" onchange="applySuggestion()">
-          <option value="">✨ Choose a deep loving message...</option>
+          <option value="">✨ Choose a romantic message...</option>
         </select>
         
-        <textarea id="msgInput" class="modal-input" placeholder="Custom message or threat..." rows="3"></textarea>
+        <textarea id="msgInput" class="modal-input" placeholder="Your custom message..." rows="3"></textarea>
         <button class="primary-btn" onclick="processLinkGeneration()">Generate Link</button>
       </div>
       <div id="step2" style="display: none; width: 100%;">
@@ -100,8 +111,8 @@
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
   const taunts = [
-    "I HAVE YOUR IP ADDRESS! 📍", "SAY NO & I LEAK THE SEARCH HISTORY 🔍", "CLICK YES OR I DELETE YOUR ROBLOX 🎮",
-    "THE POLICE ARE ON THE WAY 👮", "I'M ALREADY IN YOUR WALLS 🧱", "SAY NO AND I STEAL YOUR CAT 🐈"
+    "I HAVE YOUR IP ADDRESS! 📍", "SAY NO & I LEAK THE SEARCH HISTORY 🔍", "THE POLICE ARE ON THE WAY 👮",
+    "CLICK YES OR I DELETE YOUR ROBLOX 🎮", "I'M ALREADY IN YOUR WALLS 🧱", "SAY NO AND I EAT YOUR LAST COOKIE 🍪"
   ];
 
   window.onload = () => {
@@ -115,38 +126,34 @@
         msgEl.classList.add('pulsing');
       }, 800);
     }
-    trackEvent("Page Opened");
   };
 
   function updateSuggestions() {
-    const from = document.getElementById('creatorInput').value.trim() || "Me";
     const to = document.getElementById('targetInput').value.trim() || "You";
-    
     const deepMessages = [
-      `${to}, you are the piece of my soul I never knew was missing.`,
+      `${to}, you are the piece of soul I never knew was missing.`,
       `Every beat of my heart belongs to you, ${to}.`,
       `${to}, I want to be the reason behind your every smile.`,
-      `In a world full of temporary things, ${to}, you are my forever.`,
+      `In a world of temporary things, ${to}, you are my forever.`,
       `${to}, being with you is the only place I feel truly at home.`,
-      `My love for you, ${to}, grows deeper with every breath I take.`,
+      `My love for you, ${to}, grows deeper with every breath.`,
       `${to}, you are the best thing that has ever been mine.`,
-      `I choose you today, tomorrow, and for every lifetime to follow, ${to}.`,
-      `${to}, your love is the light that guides me through my darkest days.`,
-      `To the world you may be one person, ${to}, but to me you are the world.`,
-      `${to}, I loved you then, I love you now, and I will love you forever.`,
+      `I choose you today and every lifetime to follow, ${to}.`,
+      `${to}, your love is the light that guides my darkest days.`,
+      `To the world you are one person, ${to}, but to me you are the world.`,
+      `${to}, I loved you then, I love you now, and I will forever.`,
       `You are the poetry my life has been trying to write, ${to}.`,
       `${to}, every love story is beautiful, but ours is my favorite.`,
       `I am much more 'me' when I am with you, ${to}.`,
       `${to}, you have my whole heart for my whole life.`,
-      `If I had a flower for every time I thought of you, ${to}, I could walk in my garden forever.`,
-      `${to}, I crave you in the most innocent way—your soul, your laugh, your light.`,
+      `If I had a flower for every thought of you, ${to}, I'd walk in my garden forever.`,
+      `${to}, I crave you in the most innocent way—your soul, your light.`,
       `You are my sun, my moon, and all my stars, ${to}.`,
-      `${to}, thank you for choosing me to be your partner in this life.`,
-      `I love you, ${to}, not only for what you are, but for what I am when I am with you.`
+      `${to}, thank you for choosing me in this life.`,
+      `I love you, ${to}, for what I am when I am with you.`
     ];
-
     const select = document.getElementById('suggestionBox');
-    select.innerHTML = '<option value="">✨ Choose a deep loving message...</option>' + 
+    select.innerHTML = '<option value="">✨ Choose a romantic message...</option>' + 
       deepMessages.map(s => `<option value="${s}">${s}</option>`).join('');
   }
 
@@ -175,16 +182,20 @@
     const noBtn = document.getElementById("no");
     const yesBtn = document.getElementById("yes");
     
+    // SAFE BOUNDARIES - BUTTON NEVER LEAVES CARD OR TOUCHES HEADER
     const padding = 60;
     const minY = 180; 
-    const maxX = card.clientWidth - noBtn.offsetWidth - padding;
-    const maxY = card.clientHeight - noBtn.offsetHeight - padding;
+    const maxX = card.clientWidth - 100 - padding;
+    const maxY = card.clientHeight - 45 - padding;
 
     noBtn.style.left = (Math.random() * maxX + padding/2) + "px";
     noBtn.style.top = (Math.random() * (maxY - minY) + minY) + "px";
     noBtn.style.transform = "none"; 
 
-    if (yesScale < 4) { yesScale += 0.25; yesBtn.style.transform = `scale(${yesScale})`; }
+    if (yesScale < 4) { 
+        yesScale += 0.25; 
+        yesBtn.style.transform = `scale(${yesScale})`; 
+    }
     document.getElementById("joke-text").innerText = taunts[clickCount % taunts.length];
   }
 
