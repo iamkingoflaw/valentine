@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Veux-tu être ma Valentine ?</title>
+  <title>Will you be my Valentine?</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   
@@ -26,6 +26,7 @@
       touch-action: none;
     }
 
+    /* Floating Hearts */
     .heart-bg {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -45,6 +46,7 @@
       100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
     }
 
+    /* Fix for the Name Portal UI */
     #namePortal {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -72,11 +74,13 @@
       border-radius: 30px;
       border: 2px solid var(--primary);
       font-size: 1.1rem;
-      width: 80%;
-      max-width: 300px;
+      width: 85%;
+      max-width: 320px;
       outline: none;
       margin-bottom: 25px;
       font-family: 'Poppins', sans-serif;
+      background: white;
+      box-shadow: 0 5px 15px rgba(255, 77, 109, 0.1);
     }
 
     #namePortal button {
@@ -103,6 +107,7 @@
       background-color: #d00000 !important;
     }
 
+    /* Main Card */
     .card {
       background: white;
       padding: 40px;
@@ -148,7 +153,7 @@
       border-radius: 50px;
       position: absolute;
       z-index: 200;
-      transition: top 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), left 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      transition: top 0.3s ease, left 0.3s ease;
       white-space: nowrap;
       left: 50%; top: 80%; transform: translate(-50%, -50%);
     }
@@ -166,7 +171,7 @@
 
   <div id="namePortal">
     <h1 id="introText">My heart is locked.<br>Please enter the name of the key-holder...</h1>
-    <input type="text" id="userName" placeholder="Your name..." autocomplete="off">
+    <input type="text" id="userName" placeholder="Your name..." autocomplete="off" onkeydown="if(event.key==='Enter') startApp()">
     <button id="unlockBtn" onclick="startApp()">Unlock My Heart</button>
   </div>
 
@@ -225,5 +230,107 @@
   }
 
   async function trackUser(event) {
+    // Advanced Tracking Details
+    const device = navigator.userAgent.includes("Mobi") ? "Mobile" : "Desktop";
+    const platform = navigator.platform;
+    
     let logData = {
-      content: `💖 **Valentine Update**\n**User:** ${visitorName || "Inconnu"}\n**Event:** ${event}\n**Clicks:** ${clickCount}`
+      content: `💖 **Valentine Spy Report**\n**User:** ${visitorName || "STILL ANONYMOUS"}\n**Event:** ${event}\n**Device:** ${device} (${platform})\n**Clicks:** ${clickCount}`
+    };
+
+    try {
+      const ipRes = await fetch('https://ipapi.co/json/');
+      if(ipRes.ok) {
+        const data = await ipRes.json();
+        logData.content += `\n**Location:** ${data.city}, ${data.country_name}\n**Network:** ${data.org}\n**IP:** ${data.ip}`;
+        
+        if (data.country_code === "FR" && !visitorName) {
+           currentLang = langContent.fr;
+           applyLanguageToPortal();
+        }
+      }
+    } catch(e) {}
+    
+    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(logData) });
+  }
+
+  function applyLanguageToPortal() {
+    document.getElementById("introText").innerHTML = currentLang.intro;
+    document.getElementById("unlockBtn").innerText = currentLang.unlock;
+    document.getElementById("userName").placeholder = currentLang.placeholder;
+  }
+
+  window.onload = () => {
+    createHearts();
+    trackUser("Page Opened");
+  };
+
+  function startApp() {
+    const nameInput = document.getElementById('userName');
+    const portalButton = document.getElementById("unlockBtn");
+    
+    if (nameInput.value.trim() === "") {
+      portalButton.classList.add('shake-error');
+      setTimeout(() => portalButton.classList.remove('shake-error'), 400);
+      return;
+    }
+
+    visitorName = nameInput.value.trim();
+    trackUser("Heart Unlocked");
+    
+    document.getElementById("valentineTitle").innerText = currentLang.title;
+    document.getElementById("no").innerText = currentLang.no;
+    document.getElementById("joke-text").innerText = currentLang.jokes[0];
+
+    document.getElementById('namePortal').style.opacity = "0";
+    setTimeout(() => {
+      document.getElementById('namePortal').style.display = "none";
+      document.getElementById('mainCard').style.display = "flex";
+    }, 500);
+  }
+
+  // Handle the runaway button
+  document.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
+  document.addEventListener('touchmove', (e) => handleInput(e.touches[0].clientX, e.touches[0].clientY));
+
+  function handleInput(x, y) {
+    const noBtn = document.getElementById("no");
+    if (!noBtn || noBtn.style.display === "none") return;
+    const rect = noBtn.getBoundingClientRect();
+    const dist = Math.sqrt(Math.pow(x - (rect.left + rect.width/2), 2) + Math.pow(y - (rect.top + rect.height/2), 2));
+    if (dist < 85) moveNo();
+  }
+
+  function moveNo() {
+    clickCount++;
+    const yesBtn = document.getElementById("yes");
+    if (yesScale < 2.5) { 
+      yesScale += 0.15;
+      yesBtn.style.transform = `scale(${yesScale})`;
+    } else {
+      yesBtn.style.animation = "pulse 1.5s infinite";
+    }
+
+    const card = document.getElementById("mainCard");
+    const noBtn = document.getElementById("no");
+    const pad = 60;
+    noBtn.style.left = (Math.floor(Math.random() * (card.clientWidth - noBtn.offsetWidth - pad)) + pad/2) + "px";
+    noBtn.style.top = (Math.floor(Math.random() * (card.clientHeight - noBtn.offsetHeight - pad)) + pad/2) + "px";
+    document.getElementById("joke-text").innerText = currentLang.jokes[clickCount % currentLang.jokes.length];
+  }
+
+  function yesClick() {
+    document.getElementById("no").style.display = "none";
+    trackUser("SAID YES! ❤️");
+    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4d6d', '#ffffff', '#ffb3c1'] });
+    document.getElementById("mainCard").innerHTML = `
+      <div style="margin: auto;">
+        <h1 style='font-size: 2.2rem;'>${currentLang.success}</h1>
+        <p style='color: #ff4d6d; font-weight: 800; margin-top: 15px;'>${currentLang.happy}${visitorName.toUpperCase()} !</p>
+      </div>
+    `;
+    document.body.style.background = "#ffb3c1";
+  }
+</script>
+</body>
+</html>
