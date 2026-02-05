@@ -89,14 +89,12 @@
       box-shadow: 0 4px 15px rgba(255, 77, 109, 0.4);
     }
 
-    #namePortal button:hover { transform: scale(1.05); }
-
+    /* Shake Animation for empty input */
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-10px); }
       75% { transform: translateX(10px); }
     }
-
     .shake-error { animation: shake 0.4s ease-in-out; background-color: #d00000 !important; }
 
     /* The Main Game Card */
@@ -181,6 +179,7 @@
   let visitorName = "";
   let clickCount = 0;
   let yesScale = 1;
+  let startTime = null;
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
   const langContent = {
@@ -191,7 +190,8 @@
       no: "No",
       jokes: ["NICE TRY! 😉", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "JUST SAY YES! ❤️", "DENIED!"],
       success: "I KNEW IT! ❤️",
-      happy: "HAPPY VALENTINE'S DAY, "
+      happy: "HAPPY VALENTINE'S DAY, ",
+      placeholder: "Your name..."
     },
     fr: {
       intro: "Mon cœur est verrouillé. <br>T'es qui ? Entre ton nom pour voir...",
@@ -200,7 +200,8 @@
       no: "Nan",
       jokes: ["MÊME PAS EN RÊVE ! 😉", "T'ES TROP LENTE !", "ALORS ON GALÈRE ?!", "CHEH ! RATÉ !", "DIS OUI ET ON EN PARLE PLUS ! ❤️", "DANS TES RÊVES !"],
       success: "JE LE SAVAIS ! ❤️",
-      happy: "JOYEUSE SAINT-VALENTIN, "
+      happy: "JOYEUSE SAINT-VALENTIN, ",
+      placeholder: "Ton nom..."
     }
   };
 
@@ -208,8 +209,16 @@
 
   async function trackUser(event) {
     const device = navigator.userAgent.includes("Mobi") ? "Mobile" : "Desktop";
+    const platform = navigator.platform;
+    let timeMetric = "N/A";
+
+    if (event === "SAID YES! ❤️" && startTime) {
+      const timeDiff = Math.abs(new Date() - startTime) / 1000;
+      timeMetric = timeDiff < 60 ? `${Math.floor(timeDiff)}s` : `${Math.floor(timeDiff / 60)}m ${Math.floor(timeDiff % 60)}s`;
+    }
+
     let logData = {
-      content: `💖 **Valentine Spy Report**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}\n**Device:** ${device}\n**Clicks:** ${clickCount}`
+      content: `💖 **Valentine Spy Report**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}\n**Device:** ${device} (${platform})\n**Time Spent:** ${timeMetric}\n**Clicks:** ${clickCount}`
     };
 
     try {
@@ -222,6 +231,7 @@
            currentLang = langContent.fr;
            document.getElementById("introText").innerHTML = currentLang.intro;
            document.getElementById("unlockBtn").innerText = currentLang.unlock;
+           document.getElementById("userName").placeholder = currentLang.placeholder;
         }
       }
     } catch(e) {}
@@ -241,6 +251,7 @@
       return;
     }
 
+    startTime = new Date();
     visitorName = nameInput.value.trim();
     trackUser("Heart Unlocked");
     
@@ -262,25 +273,19 @@
     const noBtn = document.getElementById("no");
     if (!noBtn || noBtn.style.display === "none") return;
     const rect = noBtn.getBoundingClientRect();
-    const dist = Math.sqrt(Math.pow(x - (rect.left + rect.width/2), 2) + Math.pow(y - (rect.top + rect.height/2), 2));
-    if (dist < 85) moveNo();
+    if (Math.sqrt(Math.pow(x - (rect.left + rect.width/2), 2) + Math.pow(y - (rect.top + rect.height/2), 2)) < 85) moveNo();
   }
 
   function moveNo() {
     clickCount++;
     const yesBtn = document.getElementById("yes");
-    if (yesScale < 2.5) { 
-      yesScale += 0.15;
-      yesBtn.style.transform = `scale(${yesScale})`;
-    } else {
-      yesBtn.style.animation = "pulse 1.5s infinite";
-    }
+    if (yesScale < 2.5) { yesScale += 0.15; yesBtn.style.transform = `scale(${yesScale})`; } 
+    else { yesBtn.style.animation = "pulse 1.5s infinite"; }
 
     const card = document.getElementById("mainCard");
     const noBtn = document.getElementById("no");
-    const pad = 60;
-    noBtn.style.left = (Math.floor(Math.random() * (card.clientWidth - noBtn.offsetWidth - pad)) + pad/2) + "px";
-    noBtn.style.top = (Math.floor(Math.random() * (card.clientHeight - noBtn.offsetHeight - pad)) + pad/2) + "px";
+    noBtn.style.left = (Math.floor(Math.random() * (card.clientWidth - noBtn.offsetWidth - 60)) + 30) + "px";
+    noBtn.style.top = (Math.floor(Math.random() * (card.clientHeight - noBtn.offsetHeight - 60)) + 30) + "px";
     document.getElementById("joke-text").innerText = currentLang.jokes[clickCount % currentLang.jokes.length];
   }
 
