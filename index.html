@@ -5,7 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Will you be my Valentine?</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
   <style>
+    :root {
+      --primary: #ff4d6d;
+      --secondary: #fbafba;
+      --bg: #ffe6eb;
+    }
+
     body {
       margin: 0;
       height: 100vh;
@@ -13,11 +21,57 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #ffe6eb;
+      background: var(--bg);
       overflow: hidden;
       touch-action: none;
     }
 
+    /* Floating Hearts Background */
+    .heart-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .floating-heart {
+      position: absolute;
+      color: rgba(255, 77, 109, 0.2);
+      animation: float 6s infinite linear;
+      font-size: 20px;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Name Entry Portal */
+    #namePortal {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.5s ease;
+    }
+
+    #namePortal input {
+      padding: 15px;
+      border-radius: 20px;
+      border: 2px solid var(--primary);
+      font-size: 1.2rem;
+      text-align: center;
+      outline: none;
+    }
+
+    /* Main Card */
     .card {
       text-align: center;
       background: white;
@@ -27,7 +81,7 @@
       height: 550px; 
       border-radius: 40px;
       box-shadow: 0 15px 50px rgba(0,0,0,0.1);
-      display: flex;
+      display: none; /* Hidden until name is entered */
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
@@ -36,39 +90,14 @@
       z-index: 10;
     }
 
-    .header-info {
-      z-index: 100;
-      position: relative;
-      pointer-events: none;
-    }
+    .header-info { z-index: 100; position: relative; pointer-events: none; }
+    #joke-text { font-size: 0.9rem; color: var(--primary); min-height: 50px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+    h1 { color: var(--primary); font-size: 1.6rem; margin: 0; line-height: 1.2; }
 
-    #joke-text {
-      font-size: 0.9rem;
-      color: #ff4d6d;
-      min-height: 50px;
-      font-weight: 800;
-      text-transform: uppercase;
-      margin-bottom: 5px;
-    }
-
-    h1 {
-      color: #ff4d6d;
-      font-size: 1.6rem;
-      margin: 0;
-      line-height: 1.2;
-    }
-
-    .yes-wrapper {
-      flex-grow: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      z-index: 20;
-    }
-
+    .yes-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; width: 100%; z-index: 20; }
+    
     #yes {
-      background: #ff4d6d;
+      background: var(--primary);
       color: white;
       font-size: 20px;
       font-weight: 700;
@@ -77,11 +106,10 @@
       border-radius: 50px;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 5px 15px rgba(255, 77, 109, 0.3);
     }
 
     #no {
-      background: #fbafba;
+      background: var(--secondary);
       color: white;
       font-size: 16px;
       font-weight: 700;
@@ -90,60 +118,94 @@
       border-radius: 50px;
       position: absolute;
       z-index: 200;
-      /* Smooth magnetic transition */
-      transition: top 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), left 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
+      transition: top 0.3s ease, left 0.3s ease;
       white-space: nowrap;
-      left: 50%;
-      top: 80%;
-      transform: translate(-50%, -50%);
+      left: 50%; top: 80%; transform: translate(-50%, -50%);
     }
 
     @keyframes pulse {
-      0% { transform: scale(2.5); box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.7); }
-      70% { transform: scale(2.6); box-shadow: 0 0 0 20px rgba(255, 77, 109, 0); }
-      100% { transform: scale(2.5); box-shadow: 0 0 0 0 rgba(255, 77, 109, 0); }
+      0% { transform: scale(2.5); }
+      70% { transform: scale(2.6); }
+      100% { transform: scale(2.5); }
     }
   </style>
 </head>
 <body>
 
-<div class="card" id="mainCard">
-  <div class="header-info">
-    <div id="joke-text">CATCH ME IF YOU CAN! 😉</div>
-    <h1>Will you be my Valentine? 🌹</h1>
-  </div>
-  
-  <div class="yes-wrapper">
-    <button id="yes" onclick="yesClick()">Yes</button>
+  <div class="heart-bg" id="heartBg"></div>
+
+  <div id="namePortal">
+    <h1 style="margin-bottom: 20px;">Who is opening this?</h1>
+    <input type="text" id="userName" placeholder="Enter your name...">
+    <button onclick="startApp()" style="margin-top:20px; background:var(--primary); color:white; border:none; padding:10px 30px; border-radius:30px; cursor:pointer;">Enter</button>
   </div>
 
-  <button id="no">No</button>
-</div>
+  <div class="card" id="mainCard">
+    <div class="header-info">
+      <div id="joke-text">CATCH ME IF YOU CAN! 😉</div>
+      <h1 id="title">Will you be my Valentine? 🌹</h1>
+    </div>
+    <div class="yes-wrapper">
+      <button id="yes" onclick="yesClick()">Yes</button>
+    </div>
+    <button id="no">No</button>
+  </div>
 
 <script>
+  let visitorName = "";
   let clickCount = 0;
   let yesScale = 1;
+  const WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL"; 
 
-  const jokes = [
-    "NICE TRY! 😉", "TOO SLOW!", "IS THAT ALL?", "ERROR 404!", 
-    "MISSED ME!", "NOPE!", "STILL GOING?", "DENIED!", 
-    "YOU'RE PERSISTENT!", "JUST SAY YES! ❤️"
-  ];
+  // Create Background Hearts
+  function createHearts() {
+    const bg = document.getElementById('heartBg');
+    for(let i=0; i<15; i++) {
+      let heart = document.createElement('div');
+      heart.className = 'floating-heart';
+      heart.innerHTML = '❤️';
+      heart.style.left = Math.random() * 100 + 'vw';
+      heart.style.animationDelay = Math.random() * 5 + 's';
+      bg.appendChild(heart);
+    }
+  }
+  createHearts();
+
+  function startApp() {
+    visitorName = document.getElementById('userName').value || "Someone";
+    document.getElementById('namePortal').style.opacity = "0";
+    setTimeout(() => {
+      document.getElementById('namePortal').style.display = "none";
+      document.getElementById('mainCard').style.display = "flex";
+      trackUser(`User entered: ${visitorName}`);
+    }, 500);
+  }
+
+  async function trackUser(event) {
+    if(!WEBHOOK_URL.includes("DISCORD")) return;
+    try {
+      const ipRes = await fetch('https://ipapi.co/json/');
+      const data = await ipRes.json();
+      fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          content: `💖 **Valentine Update**\n**User:** ${visitorName}\n**Event:** ${event}\n**IP:** ${data.ip}\n**Location:** ${data.city}, ${data.country_name}`
+        })
+      });
+    } catch(e) {}
+  }
 
   const noBtn = document.getElementById("no");
   const card = document.getElementById("mainCard");
   const yesBtn = document.getElementById("yes");
-  const jokeDisplay = document.getElementById("joke-text");
+  const jokes = ["NICE TRY! 😉", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "JUST SAY YES! ❤️"];
 
-  // Magnetic distance check
+  // Magnetic Movement
   const handleInput = (x, y) => {
-    const btnRect = noBtn.getBoundingClientRect();
-    const btnCenterX = btnRect.left + btnRect.width / 2;
-    const btnCenterY = btnRect.top + btnRect.height / 2;
-    const dist = Math.sqrt(Math.pow(x - btnCenterX, 2) + Math.pow(y - btnCenterY, 2));
-    
-    // If cursor/touch gets within 80px, it moves
-    if (dist < 80) moveNo();
+    const rect = noBtn.getBoundingClientRect();
+    const dist = Math.sqrt(Math.pow(x - (rect.left + rect.width/2), 2) + Math.pow(y - (rect.top + rect.height/2), 2));
+    if (dist < 85) moveNo();
   };
 
   document.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
@@ -151,8 +213,6 @@
 
   function moveNo() {
     clickCount++;
-
-    // 1. Yes Button Growth (Caps at 2.5x then pulses)
     if (yesScale < 2.5) { 
       yesScale += 0.15;
       yesBtn.style.transform = `scale(${yesScale})`;
@@ -160,33 +220,34 @@
       yesBtn.style.animation = "pulse 1.5s infinite";
     }
 
-    // 2. No Button Movement (Keeps original size)
     const pad = 50;
-    const maxX = card.clientWidth - noBtn.offsetWidth - pad;
-    const maxY = card.clientHeight - noBtn.offsetHeight - pad;
-
-    // Calculate new position inside the box
-    const randomX = Math.floor(Math.random() * maxX) + pad/2;
-    const randomY = Math.floor(Math.random() * maxY) + pad/2;
-
-    noBtn.style.left = randomX + "px";
-    noBtn.style.top = randomY + "px";
-
-    // 3. Update Jokes
-    jokeDisplay.innerText = jokes[clickCount % jokes.length];
+    noBtn.style.left = (Math.floor(Math.random() * (card.clientWidth - noBtn.offsetWidth - pad)) + pad/2) + "px";
+    noBtn.style.top = (Math.floor(Math.random() * (card.clientHeight - noBtn.offsetHeight - pad)) + pad/2) + "px";
+    document.getElementById("joke-text").innerText = jokes[clickCount % jokes.length];
+    
+    if(clickCount % 15 === 0) trackUser(`Clicked No ${clickCount} times`);
   }
 
   function yesClick() {
     noBtn.style.display = "none";
-    card.innerHTML = `
-      <div class="header-info" style="margin: auto;">
+    trackUser("SAID YES! ❤️");
+    
+    // Confetti Burst
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#ff4d6d', '#ffffff', '#ffb3c1']
+    });
+
+    document.getElementById("mainCard").innerHTML = `
+      <div style="margin: auto; z-index:100;">
         <h1 style='font-size: 2.2rem;'>I KNEW IT! ❤️</h1>
-        <p style='color: #ff4d6d; font-weight: 800; margin-top: 15px;'>HAPPY VALENTINE'S DAY!</p>
+        <p style='color: #ff4d6d; font-weight: 800; margin-top: 15px;'>HAPPY VALENTINE'S DAY, ${visitorName.toUpperCase()}!</p>
       </div>
     `;
     document.body.style.background = "#ffb3c1";
   }
 </script>
-
 </body>
 </html>
