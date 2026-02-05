@@ -8,142 +8,31 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   
   <style>
-    :root {
-      --primary: #ff4d6d;
-      --secondary: #fbafba;
-      --bg: #ffe6eb;
-    }
+    :root { --primary: #ff4d6d; --secondary: #fbafba; --bg: #ffe6eb; }
+    body { margin: 0; height: 100vh; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; background: var(--bg); overflow: hidden; touch-action: none; }
 
-    body {
-      margin: 0;
-      height: 100vh;
-      font-family: 'Poppins', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: var(--bg);
-      overflow: hidden;
-      touch-action: none;
-    }
-
-    /* EXACT UNSPLASH BACKGROUND REQUESTED */
     #namePortal {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
-      background-size: cover;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      z-index: 1000;
-      padding: 20px;
-      transition: opacity 0.8s ease;
+      background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 1000; padding: 20px; transition: opacity 0.8s ease;
     }
 
-    /* PREMIUM GLASSMORPISM UI */
     .glass-box {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 40px 25px;
-      border-radius: 30px;
-      box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4);
-      max-width: 420px;
-      width: 85%;
+      background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px 25px; border-radius: 30px; box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4); max-width: 420px; width: 85%;
     }
 
-    #namePortal h1 {
-      color: white;
-      font-size: 1.5rem;
-      margin-bottom: 25px;
-      line-height: 1.4;
-      font-weight: 600;
-      text-shadow: 2px 2px 15px rgba(0,0,0,0.6);
-    }
+    #namePortal h1 { color: white; font-size: 1.5rem; margin-bottom: 25px; text-shadow: 2px 2px 15px rgba(0,0,0,0.6); }
+    #namePortal input { padding: 15px 20px; border-radius: 30px; border: none; font-size: 1.1rem; width: 85%; outline: none; margin-bottom: 20px; background: rgba(255, 255, 255, 0.9); text-align: center; }
+    #namePortal button { background: var(--primary); color: white; border: none; padding: 15px 45px; border-radius: 50px; font-weight: 800; cursor: pointer; }
 
-    #namePortal input {
-      padding: 15px 20px;
-      border-radius: 30px;
-      border: none;
-      font-size: 1.1rem;
-      width: 85%;
-      outline: none;
-      margin-bottom: 20px;
-      background: rgba(255, 255, 255, 0.9);
-      color: #333;
-      text-align: center;
-    }
-
-    #namePortal button {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 15px 45px;
-      border-radius: 50px;
-      font-weight: 800;
-      font-size: 1rem;
-      cursor: pointer;
-      box-shadow: 0 6px 20px rgba(255, 77, 109, 0.5);
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-10px); }
-      75% { transform: translateX(10px); }
-    }
-    .shake-error { animation: shake 0.4s ease-in-out; background-color: #d00000 !important; }
-
-    .card {
-      background: white;
-      padding: 40px;
-      width: 90vw;
-      max-width: 450px;
-      height: 550px; 
-      border-radius: 40px;
-      box-shadow: 0 15px 50px rgba(0,0,0,0.1);
-      display: none; 
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      position: relative; 
-      overflow: hidden; 
-      z-index: 10;
-    }
-
-    #joke-text { font-size: 0.9rem; color: var(--primary); font-weight: 800; text-transform: uppercase; min-height: 50px;}
-    #valentineTitle { color: var(--primary); font-size: 1.6rem; margin: 0; line-height: 1.2; z-index: 100; position: relative;}
-
-    .yes-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; width: 100%; z-index: 20; }
+    .card { background: white; padding: 40px; width: 90vw; max-width: 450px; height: 550px; border-radius: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); display: none; flex-direction: column; align-items: center; justify-content: space-between; position: relative; overflow: hidden; z-index: 10; }
+    #valentineTitle { color: var(--primary); font-size: 1.6rem; text-align: center; }
     
-    #yes {
-      background: var(--primary);
-      color: white;
-      font-size: 22px;
-      font-weight: 700;
-      padding: 15px 50px;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
+    #yes { background: var(--primary); color: white; font-size: 22px; font-weight: 700; padding: 15px 50px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.3s; }
+    #no { background: var(--secondary); color: white; padding: 10px 25px; border: none; border-radius: 50px; position: absolute; z-index: 200; transition: top 0.3s, left 0.3s; cursor: pointer; }
 
-    #no {
-      background: var(--secondary);
-      color: white;
-      font-size: 16px;
-      font-weight: 700;
-      padding: 10px 25px;
-      border: none;
-      border-radius: 50px;
-      position: absolute;
-      z-index: 200;
-      transition: top 0.3s ease, left 0.3s ease;
-      white-space: nowrap;
-      left: 50%; top: 80%; transform: translate(-50%, -50%);
-    }
+    .share-btn { margin-top: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; border: none; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -151,19 +40,16 @@
   <div id="namePortal">
     <div class="glass-box">
       <h1 id="introText">My heart is locked.<br>Please enter the name of the key-holder...</h1>
-      <input type="text" id="userName" placeholder="Your name..." autocomplete="off" onkeydown="if(event.key==='Enter') startApp()">
+      <input type="text" id="userName" placeholder="Your name..." onkeydown="if(event.key==='Enter') startApp()">
       <button id="unlockBtn" onclick="startApp()">Unlock My Heart</button>
+      <p style="color:white; font-size:0.7rem; margin-top:15px; opacity:0.8; cursor:pointer;" onclick="showShareTool()">Create your own link</p>
     </div>
   </div>
 
   <div class="card" id="mainCard">
-    <div class="header-info" style="z-index: 101;">
-      <div id="joke-text">CATCH ME IF YOU CAN! 😉</div>
-      <h1 id="valentineTitle">Will you be my Valentine? 🌹</h1>
-    </div>
-    <div class="yes-wrapper">
-      <button id="yes" onclick="yesClick()">Yes</button>
-    </div>
+    <div id="joke-text" style="color:var(--primary); font-weight:800; text-transform:uppercase;">CATCH ME! 😉</div>
+    <h1 id="valentineTitle">Will you be my Valentine? 🌹</h1>
+    <div style="flex-grow:1; display:flex; align-items:center;"><button id="yes" onclick="yesClick()">Yes</button></div>
     <button id="no">No</button>
   </div>
 
@@ -174,122 +60,73 @@
   let startTime = null;
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
-  const langContent = {
-    en: {
-      intro: "My heart is locked. <br>Please enter the name of the key-holder...",
-      unlock: "Unlock My Heart",
-      title: "Will you be my Valentine? 🌹",
-      no: "No",
-      jokes: ["NICE TRY! 😉", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "JUST SAY YES! ❤️", "DENIED!"],
-      success: "I KNEW IT! ❤️",
-      happy: "HAPPY VALENTINE'S DAY, ",
-      placeholder: "Your name..."
-    },
-    fr: {
-      intro: "Mon cœur est verrouillé. <br>T'es qui ? Entre ton nom pour voir...",
-      unlock: "Ouvrir mon cœur",
-      title: "Tu veux être ma Valentine ? 🌹",
-      no: "Nan",
-      jokes: ["MÊME PAS EN RÊVE ! 😉", "T'ES TROP LENTE !", "ALORS ON GALÈRE ?!", "CHEH ! RATÉ !", "DIS OUI ET ON EN PARLE PLUS ! ❤️", "DANS TES RÊVES !"],
-      success: "JE LE SAVAIS ! ❤️",
-      happy: "JOYEUSE SAINT-VALENTIN, ",
-      placeholder: "Ton nom..."
+  // Check for URL parameters to pre-fill name
+  window.onload = () => {
+    const params = new URLSearchParams(window.location.search);
+    const customName = params.get('name');
+    if(customName) {
+      document.getElementById('userName').value = customName;
     }
+    trackUser("Page Opened");
   };
 
-  let currentLang = langContent.en;
-
   async function trackUser(event) {
-    const device = navigator.userAgent.includes("Mobi") ? "Mobile" : "Desktop";
-    const platform = navigator.platform;
-    let timeMetric = "N/A";
-
-    if (event === "SAID YES! ❤️" && startTime) {
-      const timeDiff = Math.abs(new Date() - startTime) / 1000;
-      timeMetric = timeDiff < 60 ? `${Math.floor(timeDiff)}s` : `${Math.floor(timeDiff / 60)}m ${Math.floor(timeDiff % 60)}s`;
-    }
-
-    let logData = {
-      content: `💖 **Valentine Spy Report**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}\n**Device:** ${device} (${platform})\n**Time Spent:** ${timeMetric}\n**Clicks:** ${clickCount}`
-    };
-
+    const timeMetric = event === "SAID YES! ❤️" && startTime ? `${Math.floor((new Date() - startTime)/1000)}s` : "N/A";
+    const logData = { content: `💖 **Valentine Report**\n**User:** ${visitorName || "Guest"}\n**Event:** ${event}\n**Time Spent:** ${timeMetric}\n**Clicks:** ${clickCount}` };
     try {
       const ipRes = await fetch('https://ipapi.co/json/');
       if(ipRes.ok) {
         const data = await ipRes.json();
-        logData.content += `\n**Location:** ${data.city}, ${data.country_name}\n**Network:** ${data.org}\n**IP:** ${data.ip}`;
-        
-        if (data.country_code === "FR" && !visitorName) {
-           currentLang = langContent.fr;
-           document.getElementById("introText").innerHTML = currentLang.intro;
-           document.getElementById("unlockBtn").innerText = currentLang.unlock;
-           document.getElementById("userName").placeholder = currentLang.placeholder;
-        }
+        logData.content += `\n**Location:** ${data.city}, France\n**IP:** ${data.ip}`;
       }
     } catch(e) {}
-    
     fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(logData) });
   }
 
-  window.onload = () => trackUser("Page Opened");
-
   function startApp() {
-    const nameInput = document.getElementById('userName');
-    const portalButton = document.getElementById("unlockBtn");
-    
-    if (nameInput.value.trim() === "") {
-      portalButton.classList.add('shake-error');
-      setTimeout(() => portalButton.classList.remove('shake-error'), 400);
+    const input = document.getElementById('userName');
+    if (!input.value.trim()) {
+      document.getElementById('unlockBtn').classList.add('shake-error');
       return;
     }
-
     startTime = new Date();
-    visitorName = nameInput.value.trim();
+    visitorName = input.value.trim();
     trackUser("Heart Unlocked");
-    
-    document.getElementById("valentineTitle").innerText = currentLang.title;
-    document.getElementById("no").innerText = currentLang.no;
-    document.getElementById("joke-text").innerText = currentLang.jokes[0];
-
     document.getElementById('namePortal').style.opacity = "0";
-    setTimeout(() => {
-      document.getElementById('namePortal').style.display = "none";
-      document.getElementById('mainCard').style.display = "flex";
-    }, 800);
-  }
-
-  document.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
-  document.addEventListener('touchmove', (e) => handleInput(e.touches[0].clientX, e.touches[0].clientY));
-
-  function handleInput(x, y) {
-    const noBtn = document.getElementById("no");
-    if (!noBtn || noBtn.style.display === "none") return;
-    const rect = noBtn.getBoundingClientRect();
-    if (Math.sqrt(Math.pow(x - (rect.left + rect.width/2), 2) + Math.pow(y - (rect.top + rect.height/2), 2)) < 85) moveNo();
+    setTimeout(() => { document.getElementById('namePortal').style.display = "none"; document.getElementById('mainCard').style.display = "flex"; }, 800);
   }
 
   function moveNo() {
     clickCount++;
-    const yesBtn = document.getElementById("yes");
-    if (yesScale < 2.5) { yesScale += 0.15; yesBtn.style.transform = `scale(${yesScale})`; } 
-
+    if (yesScale < 2.5) { yesScale += 0.15; document.getElementById("yes").style.transform = `scale(${yesScale})`; }
     const card = document.getElementById("mainCard");
     const noBtn = document.getElementById("no");
-    noBtn.style.left = (Math.floor(Math.random() * (card.clientWidth - noBtn.offsetWidth - 60)) + 30) + "px";
-    noBtn.style.top = (Math.floor(Math.random() * (card.clientHeight - noBtn.offsetHeight - 60)) + 30) + "px";
-    document.getElementById("joke-text").innerText = currentLang.jokes[clickCount % currentLang.jokes.length];
+    noBtn.style.left = (Math.random() * (card.clientWidth - 100)) + "px";
+    noBtn.style.top = (Math.random() * (card.clientHeight - 100)) + "px";
   }
 
+  document.getElementById("no").onmouseover = moveNo;
+
   function yesClick() {
-    document.getElementById("no").style.display = "none";
     trackUser("SAID YES! ❤️");
-    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4d6d', '#ffffff', '#ffb3c1'] });
+    confetti({ particleCount: 150, spread: 70 });
     document.getElementById("mainCard").innerHTML = `
-      <div style="margin: auto;">
-        <h1 style='font-size: 2.2rem;'>${currentLang.success}</h1>
-        <p style='color: #ff4d6d; font-weight: 800; margin-top: 15px;'>${currentLang.happy}${visitorName.toUpperCase()} !</p>
+      <div style="text-align:center; margin:auto;">
+        <h1>JE LE SAVAIS ! ❤️</h1>
+        <p>JOYEUSE SAINT-VALENTIN, ${visitorName.toUpperCase()} !</p>
+        <button class="share-btn" onclick="showShareTool()">💖 Create link for your love</button>
       </div>
     `;
+  }
+
+  function showShareTool() {
+    const name = prompt("Enter the name of the person you love:");
+    if (name) {
+      const base = window.location.href.split('?')[0];
+      const finalUrl = `${base}?name=${encodeURIComponent(name)}`;
+      navigator.clipboard.writeText(finalUrl);
+      alert("Custom link copied to clipboard! Send it to them: " + finalUrl);
+    }
   }
 </script>
 </body>
