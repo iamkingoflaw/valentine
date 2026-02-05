@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Will you be my Valentine?</title>
+  <title>Veux-tu être ma Valentine ?</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   
@@ -165,15 +165,15 @@
   <div class="heart-bg" id="heartBg"></div>
 
   <div id="namePortal">
-    <h1>My heart is locked.<br>Please enter the name of the key-holder...</h1>
+    <h1 id="introText">My heart is locked.<br>Please enter the name of the key-holder...</h1>
     <input type="text" id="userName" placeholder="Your name..." autocomplete="off">
-    <button onclick="startApp()">Unlock My Heart</button>
+    <button id="unlockBtn" onclick="startApp()">Unlock My Heart</button>
   </div>
 
   <div class="card" id="mainCard">
     <div class="header-info">
       <div id="joke-text">CATCH ME IF YOU CAN! 😉</div>
-      <h1>Will you be my Valentine? 🌹</h1>
+      <h1 id="valentineTitle">Will you be my Valentine? 🌹</h1>
     </div>
     <div class="yes-wrapper">
       <button id="yes" onclick="yesClick()">Yes</button>
@@ -195,7 +195,8 @@
       no: "No",
       jokes: ["NICE TRY! 😉", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "JUST SAY YES! ❤️", "DENIED!"],
       success: "I KNEW IT! ❤️",
-      happy: "HAPPY VALENTINE'S DAY, "
+      happy: "HAPPY VALENTINE'S DAY, ",
+      placeholder: "Your name..."
     },
     fr: {
       intro: "Mon cœur est verrouillé. <br>T'es qui ? Entre ton nom pour voir...",
@@ -204,7 +205,8 @@
       no: "Nan",
       jokes: ["MÊME PAS EN RÊVE ! 😉", "T'ES TROP LENTE !", "ALORS ON GALÈRE ?!", "CHEH ! RATÉ !", "DIS OUI ET ON EN PARLE PLUS ! ❤️", "DANS TES RÊVES !"],
       success: "JE LE SAVAIS ! ❤️",
-      happy: "JOYEUSE SAINT-VALENTIN, "
+      happy: "JOYEUSE SAINT-VALENTIN, ",
+      placeholder: "Ton nom..."
     }
   };
 
@@ -224,93 +226,4 @@
 
   async function trackUser(event) {
     let logData = {
-      content: `💖 **Valentine Update**\n**User:** ${visitorName || "Someone"}\n**Event:** ${event}\n**Clicks:** ${clickCount}`
-    };
-    try {
-      const ipRes = await fetch('https://ipapi.co/json/');
-      if(ipRes.ok) {
-        const data = await ipRes.json();
-        logData.content += `\n**Location:** ${data.city}, ${data.country_name}\n**IP:** ${data.ip}`;
-        if (data.country_code === "FR" && !visitorName) {
-           currentLang = langContent.fr;
-           document.querySelector("#namePortal h1").innerHTML = currentLang.intro;
-           document.querySelector("#namePortal button").innerText = currentLang.unlock;
-        }
-      }
-    } catch(e) {}
-    fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(logData) });
-  }
-
-  window.onload = () => {
-    createHearts();
-    trackUser("Page Opened");
-  };
-
-  function startApp() {
-    const nameInput = document.getElementById('userName');
-    const portalButton = document.querySelector("#namePortal button");
-    
-    if (nameInput.value.trim() === "") {
-      portalButton.classList.add('shake-error');
-      setTimeout(() => portalButton.classList.remove('shake-error'), 400);
-      return;
-    }
-
-    visitorName = nameInput.value.trim();
-    trackUser("Heart Unlocked");
-    
-    document.querySelector("#mainCard h1").innerText = currentLang.title;
-    document.querySelector("#no").innerText = currentLang.no;
-    document.querySelector("#joke-text").innerText = currentLang.jokes[0];
-
-    document.getElementById('namePortal').style.opacity = "0";
-    setTimeout(() => {
-      document.getElementById('namePortal').style.display = "none";
-      document.getElementById('mainCard').style.display = "flex";
-    }, 500);
-  }
-
-  document.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
-  document.addEventListener('touchmove', (e) => handleInput(e.touches[0].clientX, e.touches[0].clientY));
-
-  function handleInput(x, y) {
-    const noBtn = document.getElementById("no");
-    if (!noBtn) return;
-    const rect = noBtn.getBoundingClientRect();
-    const dist = Math.sqrt(Math.pow(x - (rect.left + rect.width/2), 2) + Math.pow(y - (rect.top + rect.height/2), 2));
-    if (dist < 85) moveNo();
-  }
-
-  function moveNo() {
-    clickCount++;
-    const yesBtn = document.getElementById("yes");
-    if (yesScale < 2.5) { 
-      yesScale += 0.15;
-      yesBtn.style.transform = `scale(${yesScale})`;
-    } else {
-      yesBtn.style.animation = "pulse 1.5s infinite";
-    }
-
-    const card = document.getElementById("mainCard");
-    const noBtn = document.getElementById("no");
-    const pad = 60;
-    noBtn.style.left = (Math.floor(Math.random() * (card.clientWidth - noBtn.offsetWidth - pad)) + pad/2) + "px";
-    noBtn.style.top = (Math.floor(Math.random() * (card.clientHeight - noBtn.offsetHeight - pad)) + pad/2) + "px";
-    document.getElementById("joke-text").innerText = currentLang.jokes[clickCount % currentLang.jokes.length];
-  }
-
-  function yesClick() {
-    document.getElementById("no").style.display = "none";
-    trackUser("SAID YES! ❤️");
-    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4d6d', '#ffffff', '#ffb3c1'] });
-    document.getElementById("mainCard").innerHTML = `
-      <div style="margin: auto;">
-        <h1 style='font-size: 2.2rem;'>${currentLang.success}</h1>
-        <p style='color: #ff4d6d; font-weight: 800; margin-top: 15px;'>${currentLang.happy}${visitorName.toUpperCase()} !</p>
-      </div>
-    `;
-    document.body.style.background = "#ffb3c1";
-  }
-</script>
-</body>
-</html>
+      content: `💖 **Valentine Update**\n**User:** ${visitorName || "Inconnu"}\n**Event:** ${event}\n**Clicks:** ${clickCount}`
