@@ -23,37 +23,50 @@
       background: white;
       padding: 40px;
       width: 90vw;
-      max-width: 500px;
-      height: 500px; 
+      max-width: 450px;
+      height: 550px; 
       border-radius: 40px;
       box-shadow: 0 15px 50px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between; /* Keeps text at top, button in middle */
+      justify-content: space-between;
       position: relative; 
       overflow: hidden; 
       z-index: 10;
     }
 
-    .text-container {
-      z-index: 50; /* Higher than the Yes button */
+    /* Keeps text on the very top layer */
+    .header-info {
+      z-index: 100;
       position: relative;
       pointer-events: none;
     }
 
     #joke-text {
-      font-size: 1rem;
+      font-size: 0.9rem;
       color: #ff4d6d;
       min-height: 50px;
       font-weight: 800;
       text-transform: uppercase;
+      margin-bottom: 5px;
     }
 
     h1 {
       color: #ff4d6d;
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       margin: 0;
+      line-height: 1.2;
+    }
+
+    /* Container to keep Yes button centered and contained */
+    .yes-wrapper {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      z-index: 20;
     }
 
     #yes {
@@ -65,25 +78,24 @@
       border: none;
       border-radius: 50px;
       cursor: pointer;
-      z-index: 20; /* Lower than text-container */
-      transition: transform 0.2s ease;
-      margin-bottom: 100px; /* Keeps it centered vertically */
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 5px 15px rgba(255, 77, 109, 0.3);
     }
 
     #no {
       background: #fbafba;
       color: white;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       padding: 10px 25px;
       border: none;
       border-radius: 50px;
       position: absolute;
-      z-index: 100;
+      z-index: 200; /* Always on top of everything */
       transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
       white-space: nowrap;
       left: 50%;
-      top: 75%;
+      top: 80%;
       transform: translate(-50%, -50%);
     }
   </style>
@@ -91,12 +103,15 @@
 <body>
 
 <div class="card" id="mainCard">
-  <div class="text-container">
+  <div class="header-info">
     <div id="joke-text">CATCH ME IF YOU CAN! 😉</div>
     <h1>Will you be my Valentine? 🌹</h1>
   </div>
   
-  <button id="yes" onclick="yesClick()">Yes</button>
+  <div class="yes-wrapper">
+    <button id="yes" onclick="yesClick()">Yes</button>
+  </div>
+
   <button id="no">No</button>
 </div>
 
@@ -104,7 +119,6 @@
   let clickCount = 0;
   let yesScale = 1;
   let noScale = 1;
-  const WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL_HERE";
 
   const jokes = [
     "NICE TRY! 😉", "TOO SLOW!", "IS THAT ALL?", "ERROR 404!", 
@@ -112,100 +126,72 @@
     "YOU'RE PERSISTENT!", "JUST SAY YES! ❤️"
   ];
 
-  // ADMIN TRACKING FUNCTION
-  async function trackUser(eventLabel) {
-    try {
-      const response = await fetch('https://ipapi.co/json/');
-      const data = await response.json();
-      
-      fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          embeds: [{
-            title: eventLabel,
-            color: 0xff4d6d,
-            fields: [
-              { name: "IP", value: data.ip, inline: true },
-              { name: "Location", value: `${data.city}, ${data.country_name}`, inline: true },
-              { name: "Clicks", value: clickCount.toString(), inline: true }
-            ],
-            timestamp: new Date()
-          }]
-        })
-      });
-    } catch (e) { console.error("Adblocker blocked tracking"); }
-  }
-
-  // Initial tracking
-  window.onload = () => trackUser("Page Opened");
-
   const noBtn = document.getElementById("no");
   const card = document.getElementById("mainCard");
+  const yesBtn = document.getElementById("yes");
+  const jokeDisplay = document.getElementById("joke-text");
 
-  document.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
-  document.addEventListener('touchmove', (e) => {
-    handleMove(e.touches[0].clientX, e.touches[0].clientY);
-  });
-
-  function handleMove(mouseX, mouseY) {
+  // Magnetic tracking
+  const handleInput = (x, y) => {
     const btnRect = noBtn.getBoundingClientRect();
-    const btnCenterX = btnRect.left + btnRect.width / 2;
-    const btnCenterY = btnRect.top + btnRect.height / 2;
-    const distance = Math.sqrt(Math.pow(mouseX - btnCenterX, 2) + Math.pow(mouseY - btnCenterY, 2));
+    const dist = Math.sqrt(Math.pow(x - (btnRect.left + btnRect.width/2), 2) + Math.pow(y - (btnRect.top + btnRect.height/2), 2));
+    if (dist < 80) moveNo();
+  };
 
-    if (distance < 75) moveNo();
-  }
+  document.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
+  document.addEventListener('touchmove', (e) => handleInput(e.touches[0].clientX, e.touches[0].clientY));
 
   function moveNo() {
     clickCount++;
-    const jokeDisplay = document.getElementById("joke-text");
-    const yesBtn = document.getElementById("yes");
 
-    // 1. YES GROWTH: Every click
-    if (yesScale < 10) { // Can grow huge but text-container stays on top
-      yesScale += 0.4;
+    // 1. SMART YES GROWTH (Doesn't become "ugly")
+    if (yesScale < 2.5) { 
+      yesScale += 0.15; // Grows slower and smoother
       yesBtn.style.transform = `scale(${yesScale})`;
+    } else {
+      // Once big enough, it pulses instead of growing more
+      yesBtn.style.animation = "pulse 1.5s infinite";
     }
 
     // 2. NO SIZE LOGIC
     if (clickCount <= 5) {
       noScale = 1;
     } else if (clickCount > 5 && clickCount <= 15) {
-      noScale = Math.max(0.3, 1 - ((clickCount - 5) * 0.08));
+      noScale = Math.max(0.4, 1 - ((clickCount - 5) * 0.08));
     } else {
-      noScale += 0.08; // Starts growing back after 15
+      noScale += 0.05; // Starts growing back
     }
 
-    // 3. MAGNETIC ESCAPE
-    const padding = 60;
-    const maxX = card.clientWidth - noBtn.offsetWidth - padding;
-    const maxY = card.clientHeight - noBtn.offsetHeight - padding;
-
-    const randomX = Math.floor(Math.random() * maxX) + (padding/2);
-    const randomY = Math.floor(Math.random() * maxY) + (padding/2);
-
-    noBtn.style.left = randomX + "px";
-    noBtn.style.top = randomY + "px";
+    // 3. INTERNAL TELEPORT
+    const pad = 50;
+    const maxX = card.clientWidth - noBtn.offsetWidth - pad;
+    const maxY = card.clientHeight - noBtn.offsetHeight - pad;
+    noBtn.style.left = (Math.floor(Math.random() * maxX) + pad/2) + "px";
+    noBtn.style.top = (Math.floor(Math.random() * maxY) + pad/2) + "px";
     noBtn.style.transform = `scale(${noScale})`;
 
     jokeDisplay.innerText = jokes[clickCount % jokes.length];
-    if (clickCount % 20 === 0) trackUser(`Reached ${clickCount} clicks`);
   }
 
   function yesClick() {
-    trackUser("THEY SAID YES! ❤️");
-    const card = document.getElementById("mainCard");
     noBtn.style.display = "none";
     card.innerHTML = `
-      <div class="text-container">
-        <h1 style='font-size: 2.5rem;'>I KNEW IT! ❤️</h1>
-        <p style='color: #ff4d6d; font-weight: 800; margin-top: 20px;'>HAPPY VALENTINE'S DAY!</p>
+      <div class="header-info" style="margin: auto;">
+        <h1 style='font-size: 2.2rem;'>I KNEW IT! ❤️</h1>
+        <p style='color: #ff4d6d; font-weight: 800; margin-top: 15px;'>HAPPY VALENTINE'S DAY!</p>
       </div>
     `;
     document.body.style.background = "#ffb3c1";
   }
 </script>
+
+<style>
+  @keyframes pulse {
+    0% { transform: scale(2.5); box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.7); }
+    70% { transform: scale(2.6); box-shadow: 0 0 0 20px rgba(255, 77, 109, 0); }
+    100% { transform: scale(2.5); box-shadow: 0 0 0 0 rgba(255, 77, 109, 0); }
+  }
+</style>
 
 </body>
 </html>
