@@ -1,28 +1,122 @@
-<div id="namePortal">
-    <h1 style="margin-bottom: 20px; color:#ff4d6d; padding: 0 20px;">
-        My heart is locked. <br>Please enter the name of the key-holder...
-    </h1>
-    
-    <input type="text" id="userName" placeholder="Your name..." autocomplete="off">
-    
-    <button onclick="startApp()" style="background:var(--primary); color:white; border:none; padding:12px 40px; border-radius:30px; cursor:pointer; font-weight:bold;">
-        Unlock My Heart
-    </button>
-</div>
-
 <script>
-    // The rest of your script remains the same, 
-    // but ensure the startApp function still targets 'userName'
-    function startApp() {
-        const nameInput = document.getElementById('userName');
-        visitorName = nameInput.value.trim() || "My Favorite Person";
-        
-        trackUser("Heart Unlocked");
+  let visitorName = "";
+  let clickCount = 0;
+  let yesScale = 1;
+  const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
-        document.getElementById('namePortal').style.opacity = "0";
-        setTimeout(() => {
-            document.getElementById('namePortal').style.display = "none";
-            document.getElementById('mainCard').style.display = "flex";
-        }, 500);
+  // Language Data
+  const langContent = {
+    en: {
+      intro: "My heart is locked. <br>Please enter the name of the key-holder...",
+      unlock: "Unlock My Heart",
+      title: "Will you be my Valentine? 🌹",
+      no: "No",
+      jokes: ["NICE TRY! 😉", "TOO SLOW!", "ERROR 404!", "MISSED ME!", "JUST SAY YES! ❤️", "DENIED!", "ALMOST!"],
+      success: "I KNEW IT! ❤️",
+      happy: "HAPPY VALENTINE'S DAY, "
+    },
+    fr: {
+      intro: "Mon cœur est verrouillé. <br>Entrez le nom de celle qui détient la clé...",
+      unlock: "Déverrouiller mon cœur",
+      title: "Veux-tu être ma Valentine ? 🌹",
+      no: "Non",
+      jokes: ["BIEN ESSAYÉ ! 😉", "TROP LENT !", "ERREUR 404 !", "TU M'AS RATÉ !", "DIS OUI ! ❤️", "REFUSÉ !", "PRESQUE !"],
+      success: "JE LE SAVAIS ! ❤️",
+      happy: "JOYEUSE SAINT-VALENTIN, "
     }
+  };
+
+  let currentLang = langContent.en; // Default
+
+  // 1. DETECTION & TRACKING
+  async function setupLanguageAndTrack(event) {
+    try {
+      const ipRes = await fetch('https://ipapi.co/json/');
+      if(ipRes.ok) {
+        const data = await ipRes.json();
+        
+        // Check if user is in France
+        if (data.country_code === "FR") {
+          currentLang = langContent.fr;
+          applyLanguage();
+        }
+
+        // Send Discord Log
+        fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            embeds: [{
+              title: "💖 Valentine Tracker",
+              color: 0xff4d6d,
+              description: `**User:** ${visitorName || "Loading..."}\n**Event:** ${event}\n**Country:** ${data.country_name}\n**IP:** ${data.ip}`,
+              timestamp: new Date()
+            }]
+          })
+        });
+      }
+    } catch(e) { console.log("Language detection blocked"); }
+  }
+
+  function applyLanguage() {
+    document.querySelector("#namePortal h1").innerHTML = currentLang.intro;
+    document.querySelector("#namePortal button").innerText = currentLang.unlock;
+    document.querySelector("#mainCard h1").innerText = currentLang.title;
+    document.querySelector("#no").innerText = currentLang.no;
+    document.querySelector("#joke-text").innerText = currentLang.jokes[0];
+  }
+
+  // Initial detection on load
+  window.onload = () => {
+    createHearts();
+    setupLanguageAndTrack("Page Visited");
+  };
+
+  function startApp() {
+    const nameInput = document.getElementById('userName');
+    visitorName = nameInput.value.trim() || (currentLang === langContent.fr ? "Mon Amour" : "My Favorite Person");
+    
+    setupLanguageAndTrack("Heart Unlocked");
+
+    document.getElementById('namePortal').style.opacity = "0";
+    setTimeout(() => {
+      document.getElementById('namePortal').style.display = "none";
+      document.getElementById('mainCard').style.display = "flex";
+    }, 500);
+  }
+
+  function moveNo() {
+    clickCount++;
+    
+    if (yesScale < 2.5) { 
+      yesScale += 0.15;
+      document.getElementById("yes").style.transform = `scale(${yesScale})`;
+    } else {
+      document.getElementById("yes").style.animation = "pulse 1.5s infinite";
+    }
+
+    const card = document.getElementById("mainCard");
+    const noBtn = document.getElementById("no");
+    const pad = 60;
+    noBtn.style.left = (Math.floor(Math.random() * (card.clientWidth - noBtn.offsetWidth - pad)) + pad/2) + "px";
+    noBtn.style.top = (Math.floor(Math.random() * (card.clientHeight - noBtn.offsetHeight - pad)) + pad/2) + "px";
+
+    // Use current language jokes
+    document.getElementById("joke-text").innerText = currentLang.jokes[clickCount % currentLang.jokes.length];
+  }
+
+  function yesClick() {
+    document.getElementById("no").style.display = "none";
+    setupLanguageAndTrack("SAID YES! ❤️");
+    
+    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4d6d', '#ffffff', '#ffb3c1'] });
+
+    document.getElementById("mainCard").innerHTML = `
+      <div style="margin: auto; z-index:100;">
+        <h1 style='font-size: 2.5rem;'>${currentLang.success}</h1>
+        <p style='color: #ff4d6d; font-weight: 800; margin-top: 15px;'>${currentLang.happy}${visitorName.toUpperCase()} !</p>
+      </div>
+    `;
+    document.body.style.background = "#ffb3c1";
+  }
 </script>
