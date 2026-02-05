@@ -11,7 +11,7 @@
     :root { --primary: #ff4d6d; --secondary: #fbafba; --bg: #ffe6eb; }
     body { margin: 0; height: 100vh; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; align-items: center; background: var(--bg); overflow: hidden; touch-action: none; }
 
-    /* Background Setup */
+    /* Sunset Silhouette Background */
     #namePortal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
@@ -23,30 +23,21 @@
       border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px 25px; border-radius: 30px; box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4); max-width: 420px; width: 85%;
     }
 
-    /* Admin Panel Styling */
+    /* Admin Panel */
     #adminPanel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; color: #00ff00; font-family: monospace; padding: 20px; display: none; z-index: 5000; overflow-y: auto; font-size: 14px; }
 
-    /* Main Card UI */
-    .card { 
-      background: white; padding: 40px; width: 90vw; max-width: 450px; height: 550px; 
-      border-radius: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); 
-      display: none; flex-direction: column; align-items: center; 
-      justify-content: space-between; position: relative; overflow: hidden; z-index: 10; 
-    }
+    /* Modal UI */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(8px); }
+    .custom-modal { background: white; padding: 30px; border-radius: 30px; width: 90%; max-width: 400px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .modal-input, .modal-select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--secondary); border-radius: 12px; outline: none; font-family: 'Poppins'; box-sizing: border-box;}
+    .primary-btn { background: var(--primary); color: white; border: none; padding: 15px 25px; border-radius: 50px; cursor: pointer; font-weight: 800; width: 100%; margin-top: 15px; }
 
+    /* Game UI */
+    .card { background: white; padding: 40px; width: 90vw; max-width: 450px; height: 550px; border-radius: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); display: none; flex-direction: column; align-items: center; justify-content: space-between; position: relative; overflow: hidden; z-index: 10; }
     #valentineTitle { color: var(--primary); font-size: 1.8rem; text-align: center; font-weight: 800; margin-top: 20px; z-index: 100; pointer-events: none;}
     #joke-text { color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 0.8rem; height: 50px; text-align: center; z-index: 100; line-height: 1.2; padding: 0 10px; pointer-events: none;}
-
-    /* Button Styling */
-    .yes-wrapper { flex-grow: 1; display: flex; align-items: center; justify-content: center; width: 100%; pointer-events: none;}
-    #yes { background: var(--primary); color: white; font-size: 20px; font-weight: 700; padding: 15px 45px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.2s; z-index: 50; pointer-events: auto;}
+    #yes { background: var(--primary); color: white; font-size: 20px; font-weight: 700; padding: 15px 45px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.2s; z-index: 50; }
     #no { background: var(--secondary); color: white; padding: 12px 25px; border: none; border-radius: 50px; position: absolute; cursor: pointer; transition: all 0.2s ease; z-index: 200; bottom: 50px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
-
-    /* Viral Modal */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(8px); }
-    .custom-modal { background: white; padding: 30px; border-radius: 30px; width: 85%; max-width: 380px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-    .modal-input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid var(--secondary); border-radius: 12px; outline: none; box-sizing: border-box; font-family: 'Poppins'; }
-    .primary-btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 50px; cursor: pointer; font-weight: 800; width: 100%; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -54,15 +45,18 @@
   <div id="adminPanel">
     <h2>🕵️ SECRETS LOG (Local Activity)</h2>
     <div id="statsContent">No activity recorded yet...</div>
-    <button onclick="document.getElementById('adminPanel').style.display='none'" style="background:red; color:white; border:none; padding:10px; margin-top:20px; cursor:pointer; font-weight: 800; border-radius: 10px;">EXIT ADMIN MODE</button>
+    <button onclick="document.getElementById('adminPanel').style.display='none'" style="background:red; color:white; border:none; padding:10px; margin-top:20px; cursor:pointer; font-weight: 800; border-radius: 10px;">EXIT ADMIN</button>
   </div>
 
   <div id="modalOverlay" class="modal-overlay">
     <div class="custom-modal">
       <h2 style="color: var(--primary); margin: 0 0 10px 0;">Create Your Link</h2>
       <div id="step1" style="width: 100%;">
-        <input type="text" id="creatorInput" class="modal-input" placeholder="Your Name">
-        <input type="text" id="targetInput" class="modal-input" placeholder="Their Name">
+        <input type="text" id="creatorInput" class="modal-input" placeholder="Your Name" oninput="updateSuggestions()">
+        <input type="text" id="targetInput" class="modal-input" placeholder="Their Name" oninput="updateSuggestions()">
+        <select id="suggestionBox" class="modal-select" onchange="applySuggestion()">
+          <option value="">✨ Suggested Messages...</option>
+        </select>
         <textarea id="msgInput" class="modal-input" placeholder="Custom message or funny threat..." rows="3"></textarea>
         <button class="primary-btn" onclick="processLinkGeneration()">Generate Link</button>
       </div>
@@ -81,7 +75,7 @@
       <p id="customText" style="color:white; margin-bottom:20px; font-style: italic; font-size: 0.95rem; opacity: 0; transition: opacity 2s ease;"></p>
       <input type="text" id="userName" style="padding: 15px; border-radius: 50px; border: none; width: 85%; text-align: center;" placeholder="Your name..." onkeydown="if(event.key==='Enter') startApp()">
       <button onclick="startApp()" style="background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: 800; cursor: pointer; margin-top: 20px;">Unlock My Heart</button>
-      <p style="color:white; font-size:0.75rem; margin-top:20px; opacity:0.8; cursor:pointer; text-decoration: underline;" onclick="document.getElementById('modalOverlay').style.display='flex'">Create your own Valentine link</p>
+      <p style="color:white; font-size:0.75rem; margin-top:20px; opacity:0.8; cursor:pointer; text-decoration: underline;" onclick="document.getElementById('modalOverlay').style.display='flex'">Create your own link</p>
     </div>
   </div>
 
@@ -100,12 +94,10 @@
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
   const taunts = [
-    "I HAVE YOUR IP ADDRESS! 📍", "SAY NO & I LEAK THE SEARCH HISTORY 🔍", "I'M OUTSIDE YOUR HOUSE RN 🏠",
-    "CLICK YES OR I DELETE YOUR ROBLOX 🎮", "THE POLICE ARE ON THE WAY 👮", "YOUR PHONE WILL EXPLODE IN 5... 💣",
-    "I WILL TELL YOUR CRUSH YOU LIKE NICKI MINAJ 🎤", "I KNOW WHERE YOU LIVE 🗺️", "SAY NO AND I STEAL YOUR CAT 🐈",
-    "SAY NO AND I SEND YOUR BROWSER TABS TO YOUR DAD 📁", "I'M ALREADY IN YOUR WALLS 🧱", "I WILL PUT SALT IN YOUR COFFEE ☕",
-    "I WILL TELL EVERYONE YOU'RE A FAN OF SKIBIDI TOILET 🚽", "SAY NO AND I TELL YOUR EX YOU STILL MISS THEM 💔",
-    "I WILL CHANGE YOUR ALARM SOUND TO A SCREAM 📢", "SAY NO AND I DELETE YOUR SAVED PASSWORDS 🔑"
+    "I HAVE YOUR IP ADDRESS! 📍", "I'M OUTSIDE YOUR HOUSE RN 🏠", "SAY NO & I LEAK THE SEARCH HISTORY 🔍",
+    "YOUR PHONE WILL EXPLODE IN 5... 💣", "CLICK YES OR I DELETE YOUR ROBLOX 🎮", "I KNOW WHERE YOU LIVE 🗺️",
+    "SAY NO AND I STEAL YOUR CAT 🐈", "I'M ALREADY IN YOUR WALLS 🧱", "I WILL PUT SALT IN YOUR COFFEE ☕",
+    "SAY NO AND I DELETE YOUR SAVED PASSWORDS 🔑", "I WILL TELL EVERYONE YOU LIKE NICKI MINAJ 🎤"
   ];
 
   window.onload = () => {
@@ -116,23 +108,34 @@
       msgEl.innerText = `"${decodeURIComponent(params.get('msg'))}"`;
       setTimeout(() => { msgEl.style.opacity = "1"; }, 500);
     }
-    logToAdmin("Page Visited - Checking for user...");
-    trackEvent("Page Opened (New Visit)");
+    trackEvent("Page Opened");
   };
 
-  function logToAdmin(msg) {
-    const content = document.getElementById('statsContent');
-    const time = new Date().toLocaleTimeString();
-    content.innerHTML = `[${time}] ${msg}<br>` + content.innerHTML;
+  function updateSuggestions() {
+    const from = document.getElementById('creatorInput').value.trim() || "Me";
+    const to = document.getElementById('targetInput').value.trim() || "You";
+    const suggestions = [
+      `Hey ${to}, ${from} has a secret for you...`,
+      `${to}, will you make ${from} the happiest person?`,
+      `A special request from ${from} to ${to} ❤️`,
+      `${to}, you've been on ${from}'s mind all day.`,
+      `From ${from}'s heart, directly to ${to}.`,
+      `${to}, ${from} thinks you are incredible.`,
+      `Can ${from} be your Valentine, ${to}?`,
+      `${to}, ${from} is officially asking...`,
+      `Life is better with ${to}, says ${from}.`,
+      `To ${to}: You've stolen ${from}'s heart!`
+    ];
+    const select = document.getElementById('suggestionBox');
+    select.innerHTML = '<option value="">✨ Suggested Messages...</option>' + 
+      suggestions.map(s => `<option value="${s}">${s}</option>`).join('');
   }
+
+  function applySuggestion() { document.getElementById('msgInput').value = document.getElementById('suggestionBox').value; }
 
   async function trackEvent(event) {
     const url = threadId ? `${WEBHOOK_URL}?thread_id=${threadId}` : WEBHOOK_URL;
-    const payload = {
-      content: `**${event}**`,
-      username: visitorName || "Valentine Bot",
-      ...( !threadId && { thread_name: `Session: ${visitorName || "Guest"}` } )
-    };
+    const payload = { content: `**${event}**`, username: visitorName || "Valentine Bot", ...( !threadId && { thread_name: `Session: ${visitorName || "Guest"}` } ) };
     try {
       const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (!threadId && res.ok) { const data = await res.json(); threadId = data.id; }
@@ -142,15 +145,8 @@
   function startApp() {
     const input = document.getElementById('userName').value.trim();
     if(!input) return;
-    
-    if(input.toUpperCase() === ADMIN_CODE) {
-      document.getElementById('adminPanel').style.display = 'block';
-      logToAdmin("ADMIN MODE ACTIVATED");
-      return;
-    }
-
+    if(input.toUpperCase() === ADMIN_CODE) { document.getElementById('adminPanel').style.display = 'block'; return; }
     visitorName = input;
-    logToAdmin(`User Unlocked: ${visitorName}`);
     trackEvent(`Heart Unlocked by ${visitorName} 🔓`);
     document.getElementById('namePortal').style.display = "none";
     document.getElementById('mainCard').style.display = "flex";
@@ -162,39 +158,22 @@
     const noBtn = document.getElementById("no");
     const yesBtn = document.getElementById("yes");
 
-    // Position boundaries to prevent "No" from covering text or "Yes"
     const maxX = card.clientWidth - noBtn.offsetWidth - 40;
     const maxY = card.clientHeight - noBtn.offsetHeight - 40;
-    const minY = 170; // High enough to clear the header text
+    const minY = 170; // Clearance for header
 
-    let randomX = Math.random() * maxX;
-    let randomY = Math.random() * (maxY - minY) + minY;
+    noBtn.style.left = (Math.random() * maxX) + "px";
+    noBtn.style.top = (Math.random() * (maxY - minY) + minY) + "px";
 
-    noBtn.style.left = randomX + "px";
-    noBtn.style.top = randomY + "px";
-
-    // Cap Yes button growth so it doesn't break the layout
-    if (yesScale < 4) {
-      yesScale += 0.25;
-      yesBtn.style.transform = `scale(${yesScale})`;
-    }
-    
+    if (yesScale < 4) { yesScale += 0.25; yesBtn.style.transform = `scale(${yesScale})`; }
     document.getElementById("joke-text").innerText = taunts[clickCount % taunts.length];
-    logToAdmin(`User missed 'No'. Miss count: ${clickCount}`);
     if(clickCount % 3 === 0) trackEvent(`Struggling: ${clickCount} misses recorded.`);
   }
 
   function yesClick() {
-    trackEvent("ACCEPTED! ❤️💍 User has submitted.");
-    logToAdmin("USER SAID YES!");
+    trackEvent(`ACCEPTED! ❤️ User clicked Yes after ${clickCount} misses.`);
     confetti({ particleCount: 150, spread: 70 });
-    document.getElementById("mainCard").innerHTML = `
-      <div style="text-align:center; margin:auto; padding:20px;">
-        <h1 style="color:var(--primary)">I KNEW YOU'D SUBMIT! ❤️</h1>
-        <p>Misses: ${clickCount} | Resistance: Futile.</p>
-        <button class="primary-btn" onclick="location.reload()" style="width: auto; padding: 10px 30px;">Create Your Own Link</button>
-      </div>
-    `;
+    document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h1>I KNEW YOU'D SUBMIT! ❤️</h1><button class="primary-btn" onclick="location.reload()" style="width: auto; padding: 10px 30px;">Create Your Own</button></div>`;
   }
 
   function processLinkGeneration() {
@@ -207,17 +186,13 @@
     document.getElementById('urlDisplay').innerText = generatedUrl;
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
-    trackEvent(`New Link Created: By ${from} for ${to}`);
+    trackEvent(`New Link Created: By ${from} for ${to}\n**Message:** "${msg}"`);
   }
 
   function copyGeneratedUrl() {
     navigator.clipboard.writeText(generatedUrl).then(() => {
       document.getElementById('copyBtn').innerText = "Copied! ✅";
-      setTimeout(() => { 
-        document.getElementById('modalOverlay').style.display='none';
-        document.getElementById('step1').style.display='block';
-        document.getElementById('step2').style.display='none';
-      }, 1500);
+      setTimeout(() => { document.getElementById('modalOverlay').style.display='none'; document.getElementById('step1').style.display='block'; document.getElementById('step2').style.display='none'; }, 1000);
     });
   }
 </script>
